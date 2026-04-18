@@ -1,94 +1,144 @@
 {
   "products": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Premium Dog Food - Chicken & Rice",
       "category": "Dog Food",
       "price": 45.99,
-      "image": "🐕",
-      "description": "High-protein formula with real chicken and brown rice. Perfect for adult dogs with sensitive stomachs. Contains essential vitamins and minerals for healthy coat and immune system.",
-      "details": "Weight: 5 lbs (2.27 kg) | Serving: 1-2 cups daily | Ingredients: Chicken, Brown Rice, Sweet Potato, Fish Meal"
+      "emoji": "🐕",
+      "description": "High-protein formula with real chicken and brown rice. Perfect for adult dogs with sensitive stomachs.",
+      "specifications": {
+        "weight": "5 lbs (2.27 kg)",
+        "servingSize": "1-2 cups daily",
+        "ingredients": "Chicken, Brown Rice, Sweet Potato, Fish Meal",
+        "benefits": ["High protein content", "Sensitive stomach friendly", "Supports coat health", "Boosts immune system"]
+      }
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Organic Kitten Formula",
       "category": "Cat Food",
       "price": 38.50,
-      "image": "🐱",
-      "description": "Specially formulated for growing kittens. Rich in DHA for brain development and taurine for eye health. Made with organic, natural ingredients.",
-      "details": "Weight: 3 lbs (1.36 kg) | Serving: 3-4 cups daily | Ingredients: Organic Chicken, Organic Fish, Organic Carrots"
+      "emoji": "🐱",
+      "description": "Specially formulated for growing kittens. Rich in DHA for brain development and taurine for eye health.",
+      "specifications": {
+        "weight": "3 lbs (1.36 kg)",
+        "servingSize": "3-4 cups daily",
+        "ingredients": "Organic Chicken, Organic Fish, Organic Carrots",
+        "benefits": ["Supports brain development", "Promotes eye health", "100% organic ingredients", "Easy to digest"]
+      }
     },
     {
-      "id": 3,
+      "id": "3",
       "name": "Joint Support Supplements",
       "category": "Supplements",
       "price": 32.99,
-      "image": "💊",
-      "description": "Glucosamine and chondroitin blend to support aging dogs and cats. Reduces joint pain and improves mobility. Vet-recommended formula.",
-      "details": "Count: 120 tablets | Serving: 1-2 tablets daily | Active: Glucosamine 500mg, Chondroitin 400mg"
+      "emoji": "💊",
+      "description": "Glucosamine and chondroitin blend to support aging dogs and cats. Reduces joint pain and improves mobility.",
+      "specifications": {
+        "weight": "120 tablets",
+        "servingSize": "1-2 tablets daily",
+        "ingredients": "Glucosamine 500mg, Chondroitin 400mg",
+        "benefits": ["Reduces joint pain", "Improves mobility", "Vet-recommended", "Safe for long-term use"]
+      }
     },
     {
-      "id": 4,
+      "id": "4",
       "name": "Natural Dog Treats - Beef",
       "category": "Treats",
       "price": 12.99,
-      "image": "🍖",
-      "description": "100% all-natural beef treats made without grains, artificial colors, or preservatives. Perfect for training or rewarding good behavior.",
-      "details": "Weight: 4 oz (113g) | Count: ~20 pieces | Ingredients: Beef, Salt"
+      "emoji": "🍖",
+      "description": "100% all-natural beef treats made without grains, artificial colors, or preservatives. Perfect for training.",
+      "specifications": {
+        "weight": "4 oz (113g)",
+        "servingSize": "1-3 pieces daily",
+        "ingredients": "Beef, Salt",
+        "benefits": ["All-natural ingredients", "No artificial additives", "Perfect for training", "High protein"]
+      }
     },
     {
-      "id": 5,
+      "id": "5",
       "name": "Fish Oil Omega-3 Supplement",
       "category": "Supplements",
       "price": 28.50,
-      "image": "🐟",
-      "description": "Premium fish oil rich in Omega-3 fatty acids. Supports healthy skin, shiny coat, and cognitive function. Great for dogs and cats.",
-      "details": "Count: 180 capsules | Serving: 1-2 capsules daily | Strength: 1000mg per capsule"
+      "emoji": "🐟",
+      "description": "Premium fish oil rich in Omega-3 fatty acids. Supports healthy skin, shiny coat, and cognitive function.",
+      "specifications": {
+        "weight": "180 capsules",
+        "servingSize": "1-2 capsules daily",
+        "ingredients": "Fish Oil 1000mg per capsule",
+        "benefits": ["Supports skin health", "Promotes shiny coat", "Enhances cognitive function", "Anti-inflammatory"]
+      }
     },
     {
-      "id": 6,
+      "id": "6",
       "name": "Grain-Free Cat Food - Salmon",
       "category": "Cat Food",
       "price": 42.00,
-      "image": "🐱",
-      "description": "Grain-free formula with real salmon and sweet potato. Easier to digest and high in protein. Supports urinary health.",
-      "details": "Weight: 4 lbs (1.81 kg) | Serving: 2-3 cups daily | Ingredients: Salmon, Potato, Pea, Fish Meal"
+      "emoji": "🐱",
+      "description": "Grain-free formula with real salmon and sweet potato. Easier to digest and high in protein.",
+      "specifications": {
+        "weight": "4 lbs (1.81 kg)",
+        "servingSize": "2-3 cups daily",
+        "ingredients": "Salmon, Potato, Pea, Fish Meal",
+        "benefits": ["Grain-free formula", "High protein content", "Supports urinary health", "Easy to digest"]
+      }
     },
     {
-      "id": 7,
+      "id": "7",
       "name": "Dental Chews for Dogs",
       "category": "Treats",
       "price": 15.99,
-      "image": "🦷",
-      "description": "Specially designed dental chews that clean teeth while your dog chews. Reduces tartar buildup naturally. Approved by veterinarians.",
-      "details": "Pack: 30 chews | Weight: 8 oz | Serving: 1-2 daily | Flavor: Minty Fresh"
+      "emoji": "🦷",
+      "description": "Specially designed dental chews that clean teeth while your dog chews. Reduces tartar buildup naturally.",
+      "specifications": {
+        "weight": "8 oz (30 chews)",
+        "servingSize": "1-2 daily",
+        "ingredients": "Natural rubber base, mint flavoring",
+        "benefits": ["Cleans teeth naturally", "Reduces tartar", "Vet-approved", "Fresh breath"]
+      }
     },
     {
-      "id": 8,
+      "id": "8",
       "name": "Senior Dog Food - Lamb & Rice",
       "category": "Dog Food",
       "price": 49.99,
-      "image": "🐕",
-      "description": "Specially formulated for senior dogs (7+ years). Lower calories with added joint support. Easy to digest with lower fat content.",
-      "details": "Weight: 6 lbs (2.72 kg) | Serving: 1.5-2 cups daily | Ingredients: Lamb, Brown Rice, Sweet Potato, Fish Meal"
+      "emoji": "🐕",
+      "description": "Specially formulated for senior dogs (7+ years). Lower calories with added joint support.",
+      "specifications": {
+        "weight": "6 lbs (2.72 kg)",
+        "servingSize": "1.5-2 cups daily",
+        "ingredients": "Lamb, Brown Rice, Sweet Potato, Fish Meal",
+        "benefits": ["Formulated for seniors", "Lower calorie content", "Joint support", "Easy to digest"]
+      }
     },
     {
-      "id": 9,
+      "id": "9",
       "name": "Probiotic Digestive Supplement",
       "category": "Supplements",
       "price": 24.99,
-      "image": "🥛",
-      "description": "Beneficial bacteria blend to improve digestive health. Helps with bloating, gas, and irregular stools. For dogs and cats.",
-      "details": "Count: 90 capsules | Serving: 1 capsule daily | Strains: 8 beneficial cultures"
+      "emoji": "🥛",
+      "description": "Beneficial bacteria blend to improve digestive health. Helps with bloating, gas, and irregular stools.",
+      "specifications": {
+        "weight": "90 capsules",
+        "servingSize": "1 capsule daily",
+        "ingredients": "8 beneficial probiotic cultures",
+        "benefits": ["Improves digestion", "Reduces bloating", "Promotes regular stools", "Boosts gut health"]
+      }
     },
     {
-      "id": 10,
+      "id": "10",
       "name": "Interactive Treat Puzzle Toy",
       "category": "Toys",
       "price": 19.99,
-      "image": "🧩",
-      "description": "Durable rubber puzzle toy that dispenses treats as your pet plays. Mental stimulation and physical exercise in one. Suitable for dogs and cats.",
-      "details": "Material: Food-safe rubber | Difficulty: Medium | Cleaning: Dishwasher safe | Colors: Red/Blue"
+      "emoji": "🧩",
+      "description": "Durable rubber puzzle toy that dispenses treats as your pet plays. Mental stimulation and physical exercise.",
+      "specifications": {
+        "weight": "Food-safe silicone rubber",
+        "servingSize": "Reusable toy",
+        "ingredients": "Non-toxic rubber, BPA-free",
+        "benefits": ["Mental stimulation", "Physical exercise", "Long-lasting durability", "Dishwasher safe"]
+      }
     }
   ]
 }

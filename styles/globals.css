@@ -1,48 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 html {
-  font-size: 16px;
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: #fff;
-  color: #333;
+  @apply bg-background text-primary antialiased;
+  font-family: 'Outfit', sans-serif;
 }
 
 a {
-  color: #667eea;
+  color: inherit;
   text-decoration: none;
 }
 
-a:hover {
-  text-decoration: underline;
+.container-max {
+  @apply max-width[1400px] mx-auto px-4 md:px-8;
 }
 
-button {
-  font-family: inherit;
+/* Custom Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-display font-semibold tracking-tight;
 }
 
-input,
-textarea,
-select {
-  font-family: inherit;
+/* Boutique Buttons */
+.btn-primary {
+  @apply px-8 py-4 bg-primary text-white rounded-full font-semibold transition-all duration-300 
+         hover:bg-secondary hover:scale-[1.02] active:scale-95 shadow-sm;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-  body {
-    background: #1a1a1a;
-    color: #fff;
-  }
+.btn-secondary {
+  @apply px-8 py-4 border-2 border-primary text-primary rounded-full font-semibold transition-all duration-300 
+         hover:bg-primary hover:text-white hover:scale-[1.02] active:scale-95;
 }
+
+.btn-ghost {
+  @apply px-6 py-2 text-primary font-medium hover:bg-accent rounded-full transition-all;
+}
+
+/* Utilities */
+.glass {
+  @apply bg-white/70 backdrop-blur-md border border-white/20;
+}
+
+.card-shadow {
+  @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300;
+}
+
+.marquee-content {
+  @apply flex whitespace-nowrap animate-marquee;
+}
+
