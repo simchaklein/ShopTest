@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Plus, Minus, ShoppingBag, Truck } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, Truck, Gift } from 'lucide-react';
 import Link from 'next/link';
 
 interface CartItem {
@@ -39,7 +39,7 @@ export default function CartDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-primary/20 backdrop-blur-sm z-[150]"
+            className="fixed inset-0 bg-primary/30 backdrop-blur-md z-[150]"
           />
 
           <motion.div
@@ -47,54 +47,58 @@ export default function CartDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-background z-[200] shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 h-full w-full max-w-lg bg-background z-[200] shadow-2xl flex flex-col"
           >
             {/* Header */}
-            <div className="p-6 flex items-center justify-between border-b border-gray-100 bg-white">
-              <div className="flex items-center gap-3">
-                <ShoppingBag className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold tracking-tight">Your Cart</h2>
-                <span className="bg-accent text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {itemCount}
-                </span>
+            <div className="p-8 flex items-center justify-between border-b border-gray-100 bg-white">
+              <div className="flex items-center gap-4">
+                <div className="bg-accent p-3 rounded-2xl">
+                  <ShoppingBag className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight">Your Cart</h2>
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-widest">{itemCount} Premium Items</p>
+                </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-accent rounded-full transition-colors group"
+                className="p-3 hover:bg-accent rounded-full transition-all group"
               >
-                <X className="w-5 h-5 text-muted group-hover:text-primary" />
+                <X className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
               </button>
             </div>
 
-            {/* Free Shipping Progress */}
-            <div className="p-6 bg-accent-light border-b border-gray-100">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`p-2 rounded-full ${progress >= 100 ? 'bg-secondary text-white' : 'bg-white text-secondary'}`}>
-                  <Truck className="w-4 h-4" />
+            {/* Premium Shipping Goal */}
+            <div className="p-8 bg-white border-b border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${progress >= 100 ? 'bg-secondary text-white' : 'bg-accent text-secondary'}`}>
+                    {progress >= 100 ? <Gift className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
+                  </div>
+                  <span className="text-sm font-bold text-primary">
+                    {progress >= 100 ? "You've unlocked FREE EXPRESS shipping!" : `You're ₪${(freeShippingThreshold - total).toFixed(2)} away from free shipping`}
+                  </span>
                 </div>
-                <p className="text-sm font-medium text-primary">
-                  {progress >= 100 
-                    ? "You've unlocked free shipping! 🐾" 
-                    : `Add ₪${(freeShippingThreshold - total).toFixed(2)} more for free shipping`}
-                </p>
+                <span className="text-xs font-bold text-muted uppercase tracking-widest">{Math.round(progress)}%</span>
               </div>
-              <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-accent rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
-                  className="h-full bg-secondary"
+                  transition={{ duration: 1 }}
+                  className="h-full bg-secondary shadow-[0_0_10px_rgba(232,125,13,0.3)]"
                 />
               </div>
             </div>
 
-            {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Items List */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
               {items.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="text-6xl mb-6 opacity-20">🛒</div>
-                  <h3 className="text-lg font-bold mb-2">Your cart is empty</h3>
-                  <p className="text-muted text-sm mb-8">Looks like you haven't added anything yet.</p>
-                  <button onClick={onClose} className="btn-primary w-full max-w-[200px]">
+                  <div className="text-[10rem] mb-10 opacity-10">🐾</div>
+                  <h3 className="text-2xl font-bold text-primary mb-3">Your cart is empty</h3>
+                  <p className="text-muted text-sm max-w-[250px] mx-auto leading-relaxed mb-10">Quality nutrition starts with the first item in your cart.</p>
+                  <button onClick={onClose} className="btn-primary w-full max-w-xs">
                     Start Shopping
                   </button>
                 </div>
@@ -103,46 +107,47 @@ export default function CartDrawer({
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex gap-4 group"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex gap-6 group"
                   >
-                    <div className="w-20 h-24 bg-white rounded-2xl flex items-center justify-center text-4xl shadow-sm border border-gray-50 flex-shrink-0">
+                    <div className="w-24 h-32 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-sm border border-gray-50 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                       {item.emoji}
                     </div>
-                    <div className="flex-1 min-w-0 py-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-bold text-sm truncate pr-2 group-hover:text-secondary transition-colors">
-                          {item.name}
-                        </h4>
-                        <p className="font-bold text-sm">₪{(item.price * item.quantity).toFixed(2)}</p>
+                    <div className="flex-1 py-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-bold text-base tracking-tight leading-tight group-hover:text-secondary transition-colors">
+                            {item.name}
+                          </h4>
+                          <p className="font-bold text-base">₪{(item.price * item.quantity).toFixed(2)}</p>
+                        </div>
+                        <p className="text-muted text-[10px] font-bold uppercase tracking-widest leading-loose">
+                           ₪{item.price.toFixed(2)} / item
+                        </p>
                       </div>
-                      <p className="text-muted text-[10px] mb-4 uppercase tracking-widest font-bold">
-                        ₪{item.price.toFixed(2)} each
-                      </p>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-full px-2 py-1 shadow-sm">
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center bg-accent rounded-full px-4 py-2 border border-primary/5">
                           <button
                             onClick={() => onUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                            className="p-1 hover:text-secondary transition-colors"
+                            className="p-1 hover:text-secondary"
                           >
-                            <Minus className="w-3.5 h-3.5" />
+                            <Minus className="w-4 h-4" />
                           </button>
-                          <span className="w-4 text-center text-xs font-bold leading-none">
+                          <span className="w-8 text-center text-sm font-bold">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                            className="p-1 hover:text-secondary transition-colors"
+                            className="p-1 hover:text-secondary"
                           >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus className="w-4 h-4" />
                           </button>
                         </div>
                         <button
                           onClick={() => onRemove(item.id)}
-                          className="text-muted hover:text-red-500 transition-colors p-1"
-                          title="Remove item"
+                          className="text-muted hover:text-red-500 transition-colors p-2 bg-white rounded-full shadow-sm hover:shadow-md"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -155,33 +160,35 @@ export default function CartDrawer({
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="p-6 bg-white border-t border-gray-100 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-muted">
-                    <span>Subtotal</span>
-                    <span className="text-primary font-medium">₪{total.toFixed(2)}</span>
+              <div className="p-8 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+                <div className="space-y-4 mb-8">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted font-bold uppercase tracking-widest text-[10px]">Subtotal</span>
+                    <span className="text-primary font-bold text-lg">₪{total.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-muted">
-                    <span>Shipping</span>
-                    <span className="text-secondary font-bold uppercase tracking-widest text-[10px]">
-                      {total >= freeShippingThreshold ? 'Calculated at checkout' : 'Free over ₪50'}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted font-bold uppercase tracking-widest text-[10px]">Shipping</span>
+                    <span className="text-secondary font-black tracking-widest text-[10px]">
+                      {total >= freeShippingThreshold ? 'FREE EXPRESS' : '₪15.00'}
                     </span>
                   </div>
-                  <div className="pt-2 flex justify-between items-center">
-                    <span className="text-lg font-bold">Total</span>
-                    <span className="text-xl font-bold">₪{total.toFixed(2)}</span>
+                  <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
+                    <span className="text-xl font-bold">Estimated Total</span>
+                    <span className="text-3xl font-black text-primary">₪{(total >= freeShippingThreshold ? total : total + 15).toFixed(2)}</span>
                   </div>
                 </div>
 
                 <Link
                   href="/checkout"
                   onClick={onClose}
-                  className="w-full btn-primary block text-center py-4 bg-primary text-white rounded-2xl font-bold shadow-xl hover:bg-primary-muted transition-all active:scale-[0.98]"
+                  className="w-full btn-primary flex items-center justify-center gap-3 active:scale-[0.98]"
                 >
-                  Checkout • ₪{total.toFixed(2)}
+                  <ShoppingCart className="w-5 h-5" />
+                  Proceed to Checkout
                 </Link>
-                <p className="text-[10px] text-center text-muted uppercase tracking-widest font-bold">
-                  Secure Checkout with Max Pay
+                
+                <p className="text-[9px] text-center text-muted uppercase tracking-[0.2em] font-black mt-6">
+                   Secure Boutique Payments • 100% Guaranteed Paws
                 </p>
               </div>
             )}
@@ -191,4 +198,3 @@ export default function CartDrawer({
     </AnimatePresence>
   );
 }
-
