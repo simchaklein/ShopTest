@@ -183,7 +183,7 @@ export default function CartDrawer({
                   onClick={onClose}
                   className="w-full btn-primary flex items-center justify-center gap-3 active:scale-[0.98]"
                 >
-                  <ShoppingCart className="w-5 h-5" />
+                  <ShoppingBag className="w-5 h-5" />
                   Proceed to Checkout
                 </Link>
                 
