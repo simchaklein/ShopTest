@@ -28,7 +28,8 @@ export default function Checkout() {
     setIsMounted(true);
   }, []);
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const safeItems = items || [];
+  const subtotal = safeItems.reduce((sum, item) => sum + (Number(item?.price) || 0) * (Number(item?.quantity) || 0), 0) || 0;
   const shipping = subtotal >= 50 ? 0 : 15;
   const total = subtotal + shipping;
 
@@ -254,7 +255,7 @@ export default function Checkout() {
                     'Processing Payment...'
                   ) : (
                     <>
-                      Pay Now • ₪{total.toFixed(2)}
+                      Pay Now • ₪{Number(total || 0).toFixed(2)}
                     </>
                   )}
                 </button>
@@ -301,12 +302,12 @@ export default function Checkout() {
             <div className="space-y-4 mb-8 pt-8 border-t border-gray-200">
               <div className="flex justify-between text-sm">
                 <span className="text-muted font-medium">Subtotal</span>
-                <span className="font-bold">₪{subtotal.toFixed(2)}</span>
+                <span className="font-bold text-primary">₪{Number(subtotal || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted font-medium">Shipping</span>
-                <span className={shipping === 0 ? "text-secondary font-bold uppercase tracking-widest text-[10px]" : "font-bold"}>
-                  {shipping === 0 ? 'Complimentary' : `₪${shipping.toFixed(2)}`}
+                <span className={shipping === 0 ? "text-secondary font-bold uppercase tracking-widest text-[10px]" : "font-bold text-primary"}>
+                  {shipping === 0 ? 'Complimentary' : `₪${Number(shipping || 0).toFixed(2)}`}
                 </span>
               </div>
             </div>
@@ -316,7 +317,7 @@ export default function Checkout() {
                 <span className="text-xl font-bold">Total Reserve</span>
                 <div className="text-right">
                   <span className="text-xs text-muted font-medium mr-3">ILS</span>
-                  <span className="text-3xl font-black">₪{total.toFixed(2)}</span>
+                  <span className="text-3xl font-black">₪{Number(total || 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>

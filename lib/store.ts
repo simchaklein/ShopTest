@@ -59,7 +59,7 @@ export const useCartStore = create<CartStore>()(
 
       clearCart: () => set({ items: [] }),
 
-      toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
+      toggleCart: () => set((state) => ({ isCartOpen: !(state.isCartOpen ?? false) })),
       
       openCart: () => set({ isCartOpen: true }),
       
@@ -67,6 +67,12 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'shoptest_cart',
+      onRehydrateStorage: () => (state) => {
+        // Ensure items is always an array post-hydration
+        if (state && !Array.isArray(state.items)) {
+          state.items = [];
+        }
+      }
     }
   )
 );
