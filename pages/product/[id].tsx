@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, Check, Plus, Minus, ShieldCheck, Truck, Star } from 'lucide-react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { useCartStore } from '../../lib/store';
 
 interface Product {
   id: string;
@@ -25,12 +26,16 @@ interface Product {
 export default function ProductDetail() {
   const router = useRouter();
   const { id } = router.query;
+  const { addItem } = useCartStore();
+  
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [added, setAdded] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     if (!id) return;
 
     const fetchProduct = async () => {
@@ -51,35 +56,19 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     if (!product) return;
 
-    try {
-      const cart = localStorage.getItem('shoptest_cart');
-      let cartData = cart ? JSON.parse(cart) : { items: [] };
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      emoji: product.emoji
+    });
 
-      const existingItem = cartData.items.find((item: any) => item.id === product.id);
-
-      if (existingItem) {
-        existingItem.quantity += quantity;
-      } else {
-        cartData.items.push({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          quantity,
-          emoji: product.emoji
-        });
-      }
-
-      localStorage.setItem('shoptest_cart', JSON.stringify(cartData));
-      window.dispatchEvent(new Event('cartUpdated'));
-
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-    }
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   };
 
-  if (loading) {
+  if (!isMounted || loading) {
     return (
       <div className="bg-background min-h-screen">
         <Header />
@@ -100,7 +89,7 @@ export default function ProductDetail() {
         <Header />
         <div className="flex flex-col items-center justify-center py-40">
           <div className="text-6xl mb-6">🤌</div>
-          <h2 className="text-2xl font-bold mb-4">Product not found</h2>
+          <h2 className="text-2xl font-bold mb-4 text-primary">Product not found</h2>
           <Link href="/" className="btn-secondary">
             Return to Shop
           </Link>
@@ -161,28 +150,28 @@ export default function ProductDetail() {
 
             {/* Right: Info */}
             <div className="flex flex-col">
-              <div className="mb-10">
+              <div className="mb-10 text-primary">
                 <div className="flex items-center gap-3 mb-6">
-                  <span className="bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
-                    {product.category}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 text-secondary fill-secondary" />
-                    ))}
-                    <span className="text-[10px] font-bold text-muted ml-2">48 REVIEWS</span>
-                  </div>
+                   <span className="bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+                     {product.category}
+                   </span>
+                   <div className="flex items-center gap-1">
+                     {[...Array(5)].map((_, i) => (
+                       <Star key={i} className="w-3 h-3 text-secondary fill-secondary" />
+                     ))}
+                     <span className="text-[10px] font-bold text-muted ml-2">48 REVIEWS</span>
+                   </div>
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 leading-tight">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
                   {product.name}
                 </h1>
                 
-                <p className="text-3xl font-display font-medium text-primary mb-8">
+                <p className="text-3xl font-medium mb-8">
                   ₪{product.price.toFixed(2)}
                 </p>
 
-                <p className="text-primary/70 leading-relaxed mb-10 text-lg">
+                <p className="opacity-70 leading-relaxed mb-10 text-lg">
                   {product.description}
                 </p>
 
@@ -205,14 +194,14 @@ export default function ProductDetail() {
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="text-primary-muted hover:text-secondary transition-colors"
                     >
-                      <Minus className="w-5 h-5" />
+                      <Minus className="w-5 h-5 text-primary" />
                     </button>
-                    <span className="text-lg font-bold w-4 text-center">{quantity}</span>
+                    <span className="text-lg font-bold w-4 text-center text-primary">{quantity}</span>
                     <button 
                       onClick={() => setQuantity(quantity + 1)}
                       className="text-primary-muted hover:text-secondary transition-colors"
                     >
-                      <Plus className="w-5 h-5" />
+                      <Plus className="w-5 h-5 text-primary" />
                     </button>
                   </div>
                   
@@ -250,12 +239,12 @@ export default function ProductDetail() {
               </div>
 
               {/* Specs Grid */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="p-6 bg-white rounded-3xl border border-gray-50">
+              <div className="grid grid-cols-2 gap-6 text-primary">
+                <div className="p-6 bg-white rounded-3xl border border-gray-50 shadow-sm">
                   <h5 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2">Weight</h5>
                   <p className="font-bold">{product.specifications.weight}</p>
                 </div>
-                <div className="p-6 bg-white rounded-3xl border border-gray-50">
+                <div className="p-6 bg-white rounded-3xl border border-gray-50 shadow-sm">
                   <h5 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2">Serving</h5>
                   <p className="font-bold">{product.specifications.servingSize}</p>
                 </div>
@@ -269,4 +258,3 @@ export default function ProductDetail() {
     </div>
   );
 }
-

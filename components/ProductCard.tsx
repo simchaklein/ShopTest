@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Plus, Check } from 'lucide-react';
+import { ShoppingBag, Heart, Plus, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useCartStore } from '../lib/store';
 
 interface ProductCardProps {
   id: string;
@@ -20,6 +21,7 @@ export default function ProductCard({
   category,
   description,
 }: ProductCardProps) {
+  const { addItem } = useCartStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -29,18 +31,13 @@ export default function ProductCard({
     e.stopPropagation();
     setIsAdding(true);
 
-    const cart = localStorage.getItem('shoptest_cart');
-    let cartData = cart ? JSON.parse(cart) : { items: [] };
-
-    const existingItem = cartData.items.find((item: any) => item.id === id);
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      cartData.items.push({ id, name, price, emoji, quantity: 1 });
-    }
-
-    localStorage.setItem('shoptest_cart', JSON.stringify(cartData));
-    window.dispatchEvent(new Event('cartUpdated'));
+    addItem({
+      id,
+      name,
+      price,
+      emoji,
+      quantity: 1
+    });
 
     setTimeout(() => setIsAdding(false), 1500);
   };
@@ -78,8 +75,8 @@ export default function ProductCard({
                   onClick={handleAddToCart}
                   disabled={isAdding}
                   className={`w-full py-4 shadow-2xl rounded-2xl font-bold flex items-center justify-center gap-2 transform transition-all active:scale-95 ${
-                    isAdding ? 'bg-secondary text-white' : 'bg-white text-primary hover:bg-primary hover:text-white'
-                  }`}
+                    isAdding ? 'bg-secondary text-white border-secondary' : 'bg-white text-primary border-transparent hover:bg-primary hover:text-white'
+                  } border-2`}
                 >
                   {isAdding ? (
                     <>

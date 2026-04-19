@@ -1,76 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ShieldCheck, Truck } from 'lucide-react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  emoji: string;
-}
+import { useCartStore } from '../lib/store';
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items, updateQuantity, removeItem, clearCart } = useCartStore();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    loadCartFromStorage();
-    window.addEventListener('cartUpdated', loadCartFromStorage);
-    return () => window.removeEventListener('cartUpdated', loadCartFromStorage);
+    setIsMounted(true);
   }, []);
 
-  const loadCartFromStorage = () => {
-    try {
-      const cart = localStorage.getItem('shoptest_cart');
-      if (cart) {
-        const parsed = JSON.parse(cart);
-        setCartItems(parsed.items || []);
-      }
-    } catch (error) {
-      console.error('Error loading cart:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateQuantity = (id: string, quantity: number) => {
-    let updatedItems;
-    if (quantity <= 0) {
-      updatedItems = cartItems.filter(item => item.id !== id);
-    } else {
-      updatedItems = cartItems.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      );
-    }
-    setCartItems(updatedItems);
-    localStorage.setItem('shoptest_cart', JSON.stringify({ items: updatedItems }));
-    window.dispatchEvent(new Event('cartUpdated'));
-  };
-
-  const handleRemoveItem = (id: string) => {
-    const updatedItems = cartItems.filter(item => item.id !== id);
-    setCartItems(updatedItems);
-    localStorage.setItem('shoptest_cart', JSON.stringify({ items: updatedItems }));
-    window.dispatchEvent(new Event('cartUpdated'));
-  };
-
-  const handleClearCart = () => {
-    if (window.confirm('Are you sure you want to clear your entire boutique cart?')) {
-      setCartItems([]);
-      localStorage.setItem('shoptest_cart', JSON.stringify({ items: [] }));
-      window.dispatchEvent(new Event('cartUpdated'));
-    }
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal >= 50 ? 0 : 15;
   const total = subtotal + shipping;
 
-  if (loading) {
+  const handleClearCart = () => {
+    if (window.confirm('Are you sure you want to clear your entire boutique cart?')) {
+      clearCart();
+    }
+  };
+
+  if (!isMounted) {
     return (
       <div className="bg-background min-h-screen">
         <Header />
@@ -93,17 +47,17 @@ export default function Cart() {
             <div className="flex-[2]">
               <div className="flex items-center justify-between mb-12">
                 <h1 className="h2 text-primary">Your Selection</h1>
-                {cartItems.length > 0 && (
+                {items.length > 0 && (
                   <button onClick={handleClearCart} className="text-xs font-bold uppercase tracking-widest text-muted hover:text-red-500 transition-colors">
                     Clear Cart
                   </button>
                 )}
               </div>
 
-              {cartItems.length === 0 ? (
+              {items.length === 0 ? (
                 <div className="bg-white rounded-[3rem] p-20 text-center border border-gray-100 shadow-sm">
                   <div className="text-8xl mb-8">🛒</div>
-                  <h3 className="h3 mb-4">Your cart is empty</h3>
+                  <h3 className="h3 mb-4 text-primary">Your cart is empty</h3>
                   <p className="text-muted mb-10 max-w-xs mx-auto">Discover our premium selection and give your pet the best.</p>
                   <Link href="/" className="btn-primary inline-block">
                     Explore Boutique
@@ -111,7 +65,7 @@ export default function Cart() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {cartItems.map((item) => (
+                  {items.map((item) => (
                     <motion.div
                       key={item.id}
                       layout
@@ -126,20 +80,20 @@ export default function Cart() {
                         <p className="text-xs font-bold text-muted uppercase tracking-widest mb-4">Premium Pack</p>
                         
                         <div className="flex items-center justify-center sm:justify-start gap-6 bg-accent-light px-6 py-3 rounded-full w-max mx-auto sm:mx-0">
-                          <button onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)} className="hover:text-secondary group-hover:scale-110 transition-transform">
+                          <button onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))} className="hover:text-secondary group-hover:scale-110 transition-transform text-primary">
                             <Minus className="w-4 h-4" />
                           </button>
-                          <span className="font-bold w-4 text-center">{item.quantity}</span>
-                          <button onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)} className="hover:text-secondary group-hover:scale-110 transition-transform">
+                          <span className="font-bold w-4 text-center text-primary">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="hover:text-secondary group-hover:scale-110 transition-transform text-primary">
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-center sm:items-end gap-3">
+                      <div className="flex flex-col items-center sm:items-end gap-3 text-primary">
                         <div className="text-xl font-bold">₪{(item.price * item.quantity).toFixed(2)}</div>
                         <button 
-                          onClick={() => handleRemoveItem(item.id)}
+                          onClick={() => removeItem(item.id)}
                           className="p-3 text-muted hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -159,7 +113,7 @@ export default function Cart() {
             {/* Right: Summary */}
             <div className="flex-1 lg:max-w-md">
               <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl shadow-primary/5 sticky top-[220px]">
-                <h3 className="h3 mb-8">Summary</h3>
+                <h3 className="h3 mb-8 text-primary">Summary</h3>
                 
                 <div className="space-y-5 mb-10 pb-10 border-b border-gray-50">
                   <div className="flex justify-between text-muted text-sm font-medium">
@@ -181,9 +135,9 @@ export default function Cart() {
                   )}
                 </div>
 
-                <div className="flex justify-between items-center mb-10">
+                <div className="flex justify-between items-center mb-10 text-primary">
                   <span className="text-xl font-bold">Total Reserve</span>
-                  <span className="text-3xl font-black text-primary">₪{total.toFixed(2)}</span>
+                  <span className="text-3xl font-black">₪{total.toFixed(2)}</span>
                 </div>
 
                 <Link href="/checkout" className="btn-primary w-full block text-center mb-8">

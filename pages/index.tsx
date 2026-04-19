@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Search, ArrowRight, Star, Truck, ShieldCheck, Heart, Sparkles } from 'lucide-react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-import CartDrawer from '../components/CartDrawer';
 import Footer from '../components/Footer';
 
 interface Product {
@@ -16,30 +15,13 @@ interface Product {
   description: string;
 }
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  emoji: string;
-}
-
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cartIsOpen, setCartIsOpen] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
     fetchProducts();
-    loadCartFromStorage();
-
-    const handleCartUpdate = () => {
-      loadCartFromStorage();
-    };
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, []);
 
   const fetchProducts = async () => {
@@ -52,39 +34,6 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadCartFromStorage = () => {
-    try {
-      const cart = localStorage.getItem('shoptest_cart');
-      if (cart) {
-        const parsed = JSON.parse(cart);
-        setCartItems(parsed.items || []);
-      }
-    } catch (error) {
-      console.error('Error loading cart:', error);
-    }
-  };
-
-  const handleUpdateQuantity = (id: string, quantity: number) => {
-    let updatedItems;
-    if (quantity <= 0) {
-      updatedItems = cartItems.filter(item => item.id !== id);
-    } else {
-      updatedItems = cartItems.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      );
-    }
-    setCartItems(updatedItems);
-    localStorage.setItem('shoptest_cart', JSON.stringify({ items: updatedItems }));
-    window.dispatchEvent(new Event('cartUpdated'));
-  };
-
-  const handleRemoveItem = (id: string) => {
-    const updatedItems = cartItems.filter(item => item.id !== id);
-    setCartItems(updatedItems);
-    localStorage.setItem('shoptest_cart', JSON.stringify({ items: updatedItems }));
-    window.dispatchEvent(new Event('cartUpdated'));
   };
 
   const filteredProducts = products.filter(p =>
@@ -100,14 +49,6 @@ export default function Home() {
       </Head>
 
       <Header />
-
-      <CartDrawer
-        isOpen={cartIsOpen}
-        onClose={() => setCartIsOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemove={handleRemoveItem}
-      />
 
       <main className="pt-[160px]">
         {/* Luxury Hero Section */}
@@ -185,10 +126,10 @@ export default function Home() {
                <div className="absolute bottom-20 left-10 w-48 h-48 bg-secondary/10 blur-3xl rounded-full" />
                
                <div className="absolute bottom-10 left-10 right-10 p-6 glass rounded-3xl flex items-center gap-4 border-white/40">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">✨</div>
-                  <div>
-                    <p className="text-xs font-bold text-primary">Monthly Special</p>
-                    <p className="text-[10px] text-primary-muted font-medium">Get 20% off your first subscription</p>
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl shadow-sm text-primary">✨</div>
+                  <div className="text-primary">
+                    <p className="text-xs font-bold">Monthly Special</p>
+                    <p className="text-[10px] opacity-70 font-medium">Get 20% off your first subscription</p>
                   </div>
                </div>
             </div>
@@ -197,9 +138,9 @@ export default function Home() {
 
         {/* Categories Bar */}
         <section className="container-max mb-24 overflow-x-auto">
-          <div className="flex items-center justify-center gap-6 min-w-max pb-4">
+          <div className="flex items-center justify-center gap-6 min-w-max pb-4 px-4 md:px-0">
             {['All Products', 'Puppy Care', 'Adult Meals', 'Senior Health', 'Grooming', 'Supplements'].map((cat) => (
-              <button key={cat} className="px-8 py-3 bg-white border border-gray-100 rounded-full text-xs font-bold uppercase tracking-widest hover:border-secondary hover:text-secondary transition-all shadow-sm active:scale-95">
+              <button key={cat} className="px-8 py-3 bg-white border border-gray-100 rounded-full text-xs font-bold uppercase tracking-widest text-primary hover:border-secondary hover:text-secondary transition-all shadow-sm active:scale-95">
                 {cat}
               </button>
             ))}
@@ -221,7 +162,7 @@ export default function Home() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search dog food, treats..."
-                className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 rounded-full focus:outline-none focus:ring-4 focus:ring-secondary/5 focus:border-secondary transition-all text-sm font-medium shadow-sm"
+                className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 rounded-full focus:outline-none focus:ring-4 focus:ring-secondary/5 focus:border-secondary transition-all text-sm font-medium shadow-sm text-primary"
               />
             </div>
           </div>
@@ -307,7 +248,7 @@ export default function Home() {
                    <input 
                     type="email" 
                     placeholder="your@email.com" 
-                    className="w-full px-8 py-5 rounded-full border border-gray-200 focus:outline-none focus:ring-4 focus:ring-secondary/5 focus:border-secondary transition-all"
+                    className="w-full px-8 py-5 rounded-full border border-gray-200 focus:outline-none focus:ring-4 focus:ring-secondary/5 focus:border-secondary transition-all text-primary"
                    />
                    <button className="btn-primary whitespace-nowrap">Join Now</button>
                 </div>

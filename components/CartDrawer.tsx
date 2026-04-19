@@ -1,44 +1,34 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus, ShoppingBag, Truck, Gift } from 'lucide-react';
 import Link from 'next/link';
+import { useCartStore } from '../lib/store';
+import { useEffect, useState } from 'react';
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  emoji: string;
-}
+export default function CartDrawer() {
+  const { items, isCartOpen, closeCart, updateQuantity, removeItem } = useCartStore();
+  const [isMounted, setIsMounted] = useState(false);
 
-interface CartDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  items: CartItem[];
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onRemove: (id: string) => void;
-}
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-export default function CartDrawer({
-  isOpen,
-  onClose,
-  items,
-  onUpdateQuantity,
-  onRemove,
-}: CartDrawerProps) {
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const freeShippingThreshold = 50;
   const progress = Math.min((total / freeShippingThreshold) * 100, 100);
 
+  if (!isMounted) return null;
+
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isCartOpen && (
         <>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={closeCart}
             className="fixed inset-0 bg-primary/30 backdrop-blur-md z-[150]"
           />
 
@@ -56,12 +46,12 @@ export default function CartDrawer({
                   <ShoppingBag className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight">Your Cart</h2>
+                  <h2 className="text-xl font-bold tracking-tight text-primary">Your Cart</h2>
                   <p className="text-[10px] font-bold text-muted uppercase tracking-widest">{itemCount} Premium Items</p>
                 </div>
               </div>
               <button
-                onClick={onClose}
+                onClick={closeCart}
                 className="p-3 hover:bg-accent rounded-full transition-all group"
               >
                 <X className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
@@ -98,7 +88,7 @@ export default function CartDrawer({
                   <div className="text-[10rem] mb-10 opacity-10">🐾</div>
                   <h3 className="text-2xl font-bold text-primary mb-3">Your cart is empty</h3>
                   <p className="text-muted text-sm max-w-[250px] mx-auto leading-relaxed mb-10">Quality nutrition starts with the first item in your cart.</p>
-                  <button onClick={onClose} className="btn-primary w-full max-w-xs">
+                  <button onClick={closeCart} className="btn-primary w-full max-w-xs">
                     Start Shopping
                   </button>
                 </div>
@@ -117,10 +107,10 @@ export default function CartDrawer({
                     <div className="flex-1 py-1 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-base tracking-tight leading-tight group-hover:text-secondary transition-colors">
+                          <h4 className="font-bold text-base tracking-tight leading-tight group-hover:text-secondary transition-colors text-primary">
                             {item.name}
                           </h4>
-                          <p className="font-bold text-base">₪{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="font-bold text-base text-primary">₪{(item.price * item.quantity).toFixed(2)}</p>
                         </div>
                         <p className="text-muted text-[10px] font-bold uppercase tracking-widest leading-loose">
                            ₪{item.price.toFixed(2)} / item
@@ -130,23 +120,23 @@ export default function CartDrawer({
                       <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center bg-accent rounded-full px-4 py-2 border border-primary/5">
                           <button
-                            onClick={() => onUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                            className="p-1 hover:text-secondary"
+                            onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                            className="p-1 hover:text-secondary text-primary"
                           >
                             <Minus className="w-4 h-4" />
                           </button>
-                          <span className="w-8 text-center text-sm font-bold">
+                          <span className="w-8 text-center text-sm font-bold text-primary">
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                            className="p-1 hover:text-secondary"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="p-1 hover:text-secondary text-primary"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
                         <button
-                          onClick={() => onRemove(item.id)}
+                          onClick={() => removeItem(item.id)}
                           className="text-muted hover:text-red-500 transition-colors p-2 bg-white rounded-full shadow-sm hover:shadow-md"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -173,14 +163,14 @@ export default function CartDrawer({
                     </span>
                   </div>
                   <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
-                    <span className="text-xl font-bold">Estimated Total</span>
+                    <span className="text-xl font-bold text-primary">Estimated Total</span>
                     <span className="text-3xl font-black text-primary">₪{(total >= freeShippingThreshold ? total : total + 15).toFixed(2)}</span>
                   </div>
                 </div>
 
                 <Link
                   href="/checkout"
-                  onClick={onClose}
+                  onClick={closeCart}
                   className="w-full btn-primary flex items-center justify-center gap-3 active:scale-[0.98]"
                 >
                   <ShoppingBag className="w-5 h-5" />

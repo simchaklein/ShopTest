@@ -1,37 +1,29 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Search, User, Menu } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu } from 'lucide-react';
+import { useCartStore } from '../lib/store';
 
 export default function Header() {
+  const { items, toggleCart } = useCartStore();
   const [cartCount, setCartCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
-
-    const updateCartCount = () => {
-      const cart = localStorage.getItem('shoptest_cart');
-      if (cart) {
-        try {
-          const parsed = JSON.parse(cart);
-          const count = parsed.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
-          setCartCount(count);
-        } catch {
-          setCartCount(0);
-        }
-      }
-    };
-
-    updateCartCount();
-    window.addEventListener('cartUpdated', updateCartCount);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('cartUpdated', updateCartCount);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const count = items.reduce((sum, item) => sum + item.quantity, 0);
+    setCartCount(count);
+  }, [items]);
+
+  if (!isMounted) return null;
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100]">
@@ -80,7 +72,7 @@ export default function Header() {
             {/* Logo - Centered */}
             <Link href="/" className="flex items-center gap-2 group">
               <span className="text-3xl group-hover:scale-110 transition-transform duration-300">🐾</span>
-              <div className="flex flex-col -gap-1">
+              <div className="flex flex-col -gap-1 text-primary">
                 <span className="text-2xl font-bold tracking-tight uppercase leading-none">PetFood</span>
                 <span className="text-[8px] font-black tracking-[0.3em] uppercase opacity-40">Boutique</span>
               </div>
@@ -107,14 +99,19 @@ export default function Header() {
                 <button className="hidden sm:flex p-3 hover:bg-white rounded-full transition-all text-primary/70 hover:text-secondary">
                   <User className="w-5 h-5" />
                 </button>
-                <Link href="/cart" className="group relative p-3 bg-white border border-gray-100 rounded-full shadow-sm hover:border-secondary transition-all">
-                  <ShoppingCart className="w-5 h-5 text-primary group-hover:text-secondary transition-colors" />
+                
+                {/* Global Cart Trigger */}
+                <button 
+                  onClick={toggleCart}
+                  className="group relative p-3 bg-white border border-gray-100 rounded-full shadow-sm hover:border-secondary transition-all"
+                >
+                  <ShoppingBag className="w-5 h-5 text-primary group-hover:text-secondary transition-colors" />
                   {cartCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white">
                       {cartCount}
                     </span>
                   )}
-                </Link>
+                </button>
               </div>
             </div>
           </div>
