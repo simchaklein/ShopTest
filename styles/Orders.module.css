@@ -127,6 +127,12 @@
   color: #856404;
 }
 
+.badge.pending_payment,
+.badge.awaiting_payment {
+  background: #fff3cd;
+  color: #856404;
+}
+
 .orderDetails {
   background: white;
   padding: 30px;
@@ -179,6 +185,23 @@
 .statusBadge.pending {
   background: #fff3cd;
   color: #856404;
+}
+
+.statusBadge.pending_payment,
+.statusBadge.awaiting_payment {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.paymentNotice {
+  margin: 18px 0;
+  padding: 14px 16px;
+  background: #fff8e1;
+  border: 1px solid #ffe8a3;
+  border-radius: 8px;
+  color: #6f5200;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .itemsList {

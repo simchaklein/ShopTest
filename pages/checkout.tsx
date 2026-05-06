@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { ChevronRight, ShoppingBag, ShieldCheck, Truck, ChevronLeft, CreditCard, Lock } from 'lucide-react';
+import { ChevronRight, ShieldCheck, Truck, ChevronLeft, Lock, ExternalLink } from 'lucide-react';
 import { useCartStore } from '../lib/store';
 
 export default function Checkout() {
@@ -16,9 +16,6 @@ export default function Checkout() {
     email: '',
     fullName: '',
     phone: '',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
     address: '',
     city: '',
     zip: ''
@@ -46,32 +43,30 @@ export default function Checkout() {
     setProcessing(true);
 
     try {
-      // Simulate API call to Max Pay MCP integration
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items,
-          total,
           email: formData.email,
           fullName: formData.fullName,
-          cardNumber: formData.cardNumber.replace(/\s/g, ''),
-          expiryDate: formData.expiryDate,
-          cvv: formData.cvv
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          zip: formData.zip
         })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Payment failed');
+        throw new Error(data.error || 'Could not create order');
       }
 
-      // Success flow
       clearCart();
       router.push(`/orders?orderId=${data.order.id}`);
     } catch (err: any) {
-      setError(err.message || 'An error occurred during checkout');
+      setError(err.message || 'An error occurred while creating your order');
     } finally {
       setProcessing(false);
     }
@@ -170,6 +165,7 @@ export default function Checkout() {
                       placeholder="City"
                       value={formData.city}
                       onChange={handleInputChange}
+                      required
                       className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
                     />
                     <input
@@ -178,6 +174,7 @@ export default function Checkout() {
                       placeholder="Zip Code"
                       value={formData.zip}
                       onChange={handleInputChange}
+                      required
                       className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
                     />
                   </div>
@@ -198,43 +195,23 @@ export default function Checkout() {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-xl font-bold">Payment</h2>
-                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest mt-1">All transactions are secure and encrypted.</p>
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest mt-1">Stripe Checkout will be connected here.</p>
                   </div>
                   <Lock className="w-5 h-5 text-secondary" />
                 </div>
-                
-                <div className="space-y-4">
-                  <div className="relative">
-                    <CreditCard className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none" />
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      placeholder="Card Number"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all pr-12"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="expiryDate"
-                      placeholder="MM / YY"
-                      value={formData.expiryDate}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
-                    />
-                    <input
-                      type="text"
-                      name="cvv"
-                      placeholder="CVV"
-                      value={formData.cvv}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
-                    />
+
+                <div className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-secondary flex-shrink-0">
+                      <ExternalLink className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-primary mb-2">Ready for hosted payment</p>
+                      <p className="text-sm text-muted leading-relaxed">
+                        Card details are not collected by this store. When Stripe is connected,
+                        customers will continue to a secure hosted payment step after the order is created.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -252,10 +229,10 @@ export default function Checkout() {
                   className="w-full sm:flex-1 btn-primary py-6 rounded-2xl text-xl shadow-2xl shadow-secondary/20 flex items-center justify-center gap-3 disabled:opacity-70"
                 >
                   {processing ? (
-                    'Processing Payment...'
+                    'Creating Order...'
                   ) : (
                     <>
-                      Pay Now • ₪{Number(total || 0).toFixed(2)}
+                      Continue to Payment • ₪{Number(total || 0).toFixed(2)}
                     </>
                   )}
                 </button>

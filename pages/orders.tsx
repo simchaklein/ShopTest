@@ -7,10 +7,18 @@ import styles from '../styles/Orders.module.css';
 interface Order {
   id: string;
   items: any[];
+  subtotal?: number;
+  shipping?: number;
   total: number;
   email: string;
+  customer?: {
+    email?: string;
+    fullName?: string;
+    phone?: string;
+  };
   status: string;
   paymentStatus: string;
+  paymentProvider?: string;
   createdAt: string;
 }
 
@@ -44,6 +52,11 @@ export default function Orders() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getStatusClass = (status?: string) => {
+    if (!status) return '';
+    return styles[status] || '';
   };
 
   if (loading) {
@@ -86,7 +99,7 @@ export default function Orders() {
                     </p>
                   </div>
                   <div className={styles.orderPrice}>₪{order.total.toFixed(2)}</div>
-                  <span className={`${styles.badge} ${styles[order.paymentStatus]}`}>
+                  <span className={`${styles.badge} ${getStatusClass(order.paymentStatus)}`}>
                     {order.paymentStatus}
                   </span>
                 </div>
@@ -106,18 +119,32 @@ export default function Orders() {
                 </div>
                 <div className={styles.detail}>
                   <label>Email:</label>
-                  <span>{selectedOrder.email}</span>
+                  <span>{selectedOrder.customer?.email || selectedOrder.email}</span>
                 </div>
                 <div className={styles.detail}>
                   <label>Status:</label>
-                  <span className={styles.statusBadge}>{selectedOrder.status}</span>
+                  <span className={`${styles.statusBadge} ${getStatusClass(selectedOrder.status)}`}>
+                    {selectedOrder.status}
+                  </span>
                 </div>
                 <div className={styles.detail}>
                   <label>Payment Status:</label>
-                  <span className={`${styles.statusBadge} ${styles[selectedOrder.paymentStatus]}`}>
+                  <span className={`${styles.statusBadge} ${getStatusClass(selectedOrder.paymentStatus)}`}>
                     {selectedOrder.paymentStatus}
                   </span>
                 </div>
+                {selectedOrder.paymentProvider && (
+                  <div className={styles.detail}>
+                    <label>Payment Provider:</label>
+                    <span>{selectedOrder.paymentProvider}</span>
+                  </div>
+                )}
+                {selectedOrder.paymentStatus === 'pending_payment' && (
+                  <div className={styles.paymentNotice}>
+                    This order is ready for a hosted payment provider such as Stripe.
+                    No card details were collected by the store.
+                  </div>
+                )}
 
                 <h3>Items</h3>
                 <div className={styles.itemsList}>

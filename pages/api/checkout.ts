@@ -1,5 +1,28 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { addOrder } from '../../lib/db';
+import { addOrder, getProducts } from '../../lib/db';
+
+type CheckoutItemInput = {
+  id?: string | number;
+  quantity?: number;
+};
+
+type Product = {
+  id: string | number;
+  name: string;
+  price: number;
+  emoji?: string;
+};
+
+function normalizeProducts(data: any): Product[] {
+  const products = Array.isArray(data) ? data : data?.products;
+  return Array.isArray(products) ? products : [];
+}
+
+function normalizeQuantity(quantity: unknown) {
+  const parsed = Math.floor(Number(quantity));
+  if (!Number.isFinite(parsed) || parsed < 1) return 1;
+  return Math.min(parsed, 99);
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,43 +33,71 @@ export default async function handler(
   }
 
   try {
-    const { items, total, email, cardNumber, expiryDate, cvv } = req.body;
+    const { items, email, fullName, phone, address, city, zip } = req.body;
 
-    if (!items || !total || !email || !cardNumber) {
+    if (!Array.isArray(items) || items.length === 0 || !email || !fullName || !phone || !address || !city || !zip) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // In a real implementation, this would call the Max Pay MCP
-    // For now, we'll simulate a successful payment
-    const simulateMaxPayCall = async () => {
-      // Placeholder for Max Pay MCP integration
-      // This would use the charge_recurring tool from Max Pay MCP
-      return {
-        success: true,
-        transactionId: `TXN-${Date.now()}`,
-        token: `TOKEN-${Math.random().toString(36).substr(2, 9)}`,
-        expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        message: 'Payment processed successfully via Max Pay'
-      };
-    };
+    const products = normalizeProducts(await getProducts());
 
-    const paymentResult = await simulateMaxPayCall();
-
-    if (!paymentResult.success) {
-      return res.status(400).json({ error: 'Payment failed' });
+    if (products.length === 0) {
+      return res.status(500).json({ error: 'Product catalog is unavailable' });
     }
 
-    // Create order after successful payment
+    const orderItems = (items as CheckoutItemInput[]).map((item) => {
+      const product = products.find((p) => String(p.id) === String(item.id));
+      if (!product) return null;
+
+      const quantity = normalizeQuantity(item.quantity);
+      return {
+        id: String(product.id),
+        name: product.name,
+        price: Number(product.price) || 0,
+        quantity,
+        emoji: product.emoji || '',
+      };
+    });
+
+    if (orderItems.some((item) => item === null)) {
+      return res.status(400).json({ error: 'Cart contains unavailable products' });
+    }
+
+    const safeOrderItems = orderItems.filter(Boolean) as Array<{
+      id: string;
+      name: string;
+      price: number;
+      quantity: number;
+      emoji: string;
+    }>;
+
+    const subtotal = safeOrderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const shipping = subtotal >= 50 ? 0 : 15;
+    const total = Number((subtotal + shipping).toFixed(2));
+
     const order = {
       id: `ORD-${Date.now()}`,
-      items,
-      total,
+      type: 'one_time',
+      items: safeOrderItems,
+      customer: {
+        email,
+        fullName,
+        phone,
+      },
+      shippingAddress: {
+        address,
+        city,
+        zip,
+      },
       email,
-      paymentToken: paymentResult.token,
-      paymentStatus: 'completed',
-      transactionId: paymentResult.transactionId,
+      subtotal: Number(subtotal.toFixed(2)),
+      shipping,
+      total,
+      currency: 'ILS',
+      paymentStatus: 'pending_payment',
+      paymentProvider: 'pending',
       createdAt: new Date().toISOString(),
-      status: 'confirmed'
+      status: 'awaiting_payment'
     };
 
     await addOrder(order);
@@ -54,8 +105,7 @@ export default async function handler(
     res.status(200).json({
       success: true,
       order,
-      payment: paymentResult,
-      message: 'Order created and payment processed'
+      message: 'Order created and ready for hosted payment'
     });
   } catch (error) {
     console.error('Checkout error:', error);
