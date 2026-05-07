@@ -1,6 +1,7 @@
 import {
   CheckCircle2,
   CreditCard,
+  Database,
   KeyRound,
   Lock,
   PlugZap,
@@ -54,6 +55,13 @@ export default function AdminSettings() {
               </span>
               <strong>Not collected by ShopTest</strong>
             </div>
+            <div className={styles.settingRow}>
+              <span>
+                <Database className={styles.settingIcon} />
+                Order storage
+              </span>
+              <strong>Vercel Blob with local JSON fallback</strong>
+            </div>
           </div>
         </div>
 
@@ -85,6 +93,13 @@ export default function AdminSettings() {
               <span>
                 <strong>Secrets stay outside Git</strong>
                 <small>Terminal credentials belong in deployment environment variables.</small>
+              </span>
+            </div>
+            <div className={styles.checkItem}>
+              <Database className={styles.checkIcon} />
+              <span>
+                <strong>Orders can persist on Vercel</strong>
+                <small>Set BLOB_READ_WRITE_TOKEN to store orders outside the serverless filesystem.</small>
               </span>
             </div>
           </div>

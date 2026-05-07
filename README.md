@@ -16,8 +16,8 @@ A production-quality e-commerce application built with Next.js 14, designed to t
 
 - **Frontend**: Next.js 14, React 18, TypeScript
 - **Styling**: CSS Modules with responsive design
-- **Storage**: JSON file-based (Vercel-compatible)
-- **Payment**: Max Pay MCP integration
+- **Storage**: Vercel Blob for order persistence, with local JSON fallback
+- **Payment**: Hosted-payment-ready checkout for Max Pay MCP testing
 - **Deployment**: Vercel
 
 ## Project Structure
@@ -89,14 +89,34 @@ npm run build
 npm start
 ```
 
+## Local Demo Database
+
+ShopTest uses the smallest possible storage layer for testing checkout and payment integrations:
+
+- Products are loaded from `data/products.json`.
+- Orders are read from `data/orders.json` locally.
+- When `BLOB_READ_WRITE_TOKEN` exists, order writes are stored in Vercel Blob at:
+
+```text
+shoptest-db/orders.json
+```
+
+Optional prefix override:
+
+```env
+SHOPTEST_DB_PREFIX=shoptest-db
+```
+
+This keeps local development simple while letting Vercel deployments persist demo orders outside the serverless filesystem.
+
 ## Max Pay MCP Integration
 
-The checkout flow integrates with Max Pay MCP for payment processing:
+The checkout flow is prepared for a hosted payment provider such as Max Pay MCP:
 
 - **Endpoint**: `/api/checkout`
-- **Tool Used**: `charge_recurring` (simulated for testing)
-- **Sandbox Mode**: All payments are processed in sandbox
-- **Payment Token**: Generated and stored with orders
+- **Payment state**: Orders are created as `pending_payment`
+- **Sandbox Mode**: Intended for test terminals only
+- **Card data**: Not collected by ShopTest
 
 ## Deployment
 
@@ -116,19 +136,16 @@ The app automatically deploys when pushed to GitHub.
 
 1. Add products to cart
 2. Go to checkout
-3. Fill in test credit card details:
-   - Card: 4242 4242 4242 4242
-   - Expiry: Any future date (MM/YY)
-   - CVV: Any 3 digits
-4. Complete purchase
-5. View order in Order History
+3. Fill in customer and shipping details
+4. Create an order
+5. View the pending order in Order History or `/admin/orders`
 
 ## Notes
 
 - Cart data persists in browser localStorage
-- Orders are stored in `/data/orders.json`
-- JSON files reset on Vercel redeploy (expected for testing)
-- Production deployment would require permanent storage
+- Orders use Vercel Blob when `BLOB_READ_WRITE_TOKEN` is configured
+- Without Vercel Blob, local JSON files are used as a development fallback
+- Do not commit real payment credentials, card data, or production terminal secrets
 
 ## Author
 

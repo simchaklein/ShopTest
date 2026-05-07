@@ -1,7 +1,17 @@
 import fs from 'fs';
 import path from 'path';
+import { get, put } from '@vercel/blob';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
+const BLOB_PREFIX = process.env.SHOPTEST_DB_PREFIX || 'shoptest-db';
+
+function hasBlobStore() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+function blobPath(filename: string) {
+  return `${BLOB_PREFIX}/${filename}`;
+}
 
 // Ensure data directory exists
 function ensureDataDir() {
@@ -10,7 +20,7 @@ function ensureDataDir() {
   }
 }
 
-export async function readJSON(filename: string) {
+async function readLocalJSON(filename: string) {
   try {
     ensureDataDir();
     const filepath = path.join(DATA_DIR, filename);
@@ -25,7 +35,7 @@ export async function readJSON(filename: string) {
   }
 }
 
-export async function writeJSON(filename: string, data: any) {
+async function writeLocalJSON(filename: string, data: any) {
   try {
     ensureDataDir();
     const filepath = path.join(DATA_DIR, filename);
@@ -35,6 +45,58 @@ export async function writeJSON(filename: string, data: any) {
     console.error(`Error writing ${filename}:`, error);
     return false;
   }
+}
+
+async function readBlobJSON(filename: string) {
+  try {
+    const response = await get(blobPath(filename), { access: 'public' });
+
+    if (!response || response.statusCode !== 200 || !response.stream) {
+      return null;
+    }
+
+    const text = await new Response(response.stream).text();
+    return JSON.parse(text);
+  } catch (error: any) {
+    if (error?.name === 'BlobNotFoundError' || error?.message?.includes('not found')) {
+      return null;
+    }
+
+    console.error(`Error reading blob ${filename}:`, error);
+    return null;
+  }
+}
+
+async function writeBlobJSON(filename: string, data: any) {
+  try {
+    await put(blobPath(filename), JSON.stringify(data, null, 2), {
+      access: 'public',
+      allowOverwrite: true,
+      contentType: 'application/json',
+    });
+
+    return true;
+  } catch (error) {
+    console.error(`Error writing blob ${filename}:`, error);
+    return false;
+  }
+}
+
+export async function readJSON(filename: string) {
+  if (hasBlobStore()) {
+    const blobData = await readBlobJSON(filename);
+    if (blobData !== null) return blobData;
+  }
+
+  return readLocalJSON(filename);
+}
+
+export async function writeJSON(filename: string, data: any) {
+  if (hasBlobStore()) {
+    return writeBlobJSON(filename, data);
+  }
+
+  return writeLocalJSON(filename, data);
 }
 
 export async function getProducts() {
