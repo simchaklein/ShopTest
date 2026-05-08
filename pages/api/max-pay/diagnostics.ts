@@ -44,6 +44,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       },
       secretsInFrontend: 'not_detected_by_static_route_check',
     },
-    note: 'Diagnostics are local to ShopTest and are not sent to Max Pay MCP backend.',
+    note: 'Diagnostics stay local to this project and are not reported externally.',
   });
 }
