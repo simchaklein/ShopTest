@@ -45,6 +45,61 @@ Use variable names only here. Do not write secret values into this guide.
 - HYP_MID
 - HYP_ENDPOINT
 
+## Changing Hyp / Max Pay Settings Later
+
+Use environment variables only when changing Hyp / Max Pay settings. Do not hardcode credentials in source code. Do not write credentials into .maxpay files or this guide.
+
+### Where credentials live
+- Local development: .env or .env.local.
+- Vercel / hosting: project environment variables.
+- Never in code.
+- Never in .maxpay files.
+
+### Change terminal / masof
+- HYP_TERMINAL
+
+### Change API user/password
+- HYP_USER
+- HYP_PASSWORD
+
+### Change API endpoint
+- HYP_ENDPOINT
+
+Test and production endpoints are different. Do not use the Hyp panel/login URL as the API endpoint. The API endpoint should come from Hyp API docs, the Hyp panel, or Hyp/Max onboarding, and is expected to be an API Relay endpoint such as an /xpo/Relay path when that is what Hyp provides for the terminal.
+
+### Change merchant ID if required
+- HYP_MID
+
+### Switch from test to production
+Set:
+
+- MAXPAY_ENV=production
+
+Also update these with production values from Hyp/Max:
+
+- HYP_ENDPOINT
+- HYP_TERMINAL
+- HYP_USER
+- HYP_PASSWORD
+- HYP_MID, if required
+
+### Change callback and return URLs
+- MAXPAY_PUBLIC_BASE_URL
+- MAXPAY_SUCCESS_URL
+- MAXPAY_FAILED_URL
+- MAXPAY_CANCEL_URL
+- MAXPAY_NOTIFY_URL
+
+### Enable or disable features
+- MAXPAY_ENABLE_CORE_CHECKOUT
+- MAXPAY_ENABLE_DIAGNOSTICS
+- MAXPAY_ENABLE_RECURRING
+- MAXPAY_ENABLE_INVOICES
+- MAXPAY_ENABLE_APPLE_PAY
+- MAXPAY_ENABLE_GOOGLE_PAY
+
+Credentials are controlled through env only. Callback URLs are controlled through env only. Features are controlled through flags. Use this guide for future prompts. Never hardcode Hyp credentials.
+
 ## Git/state warning
 `.maxpay/install-state.json` is local Max Pay installation state. It contains no secrets, but it is normally recommended not to commit it. If it is deleted or corrupted after token binding, you may need to request/register for a new install token.
 
