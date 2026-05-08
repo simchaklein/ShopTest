@@ -67,7 +67,7 @@ function buildTxnSetupXml(order: ShopTestOrder, req: NextApiRequest) {
       <currency>ILS</currency>
       <transactionCode>Internet</transactionCode>
       <validation>TxnSetup</validation>
-      ${process.env.HYP_MID ? `<mid>${escapeXml(process.env.HYP_MID)}</mid>` : ''}
+      <mid>${escapeXml(config.mid)}</mid>
       <uniqueid>${escapeXml(order.id || randomUUID())}</uniqueid>
       <mpiValidation>AutoComm</mpiValidation>
       <description>${escapeXml(itemSummary)}</description>

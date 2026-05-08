@@ -28,7 +28,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       expectedRoutes: requiredRoutes,
       missingEnv,
       maxPayEnv: config.env,
-      endpointMode: config.endpoint.includes('hyp.co.il') ? 'hyp' : 'custom',
+      endpointMode: config.endpoint.includes('/xpo/Relay') ? 'hyp-relay' : config.endpoint ? 'custom' : 'missing',
       responseMacHelper: 'installed',
       callbackNotify: 'installed',
       secretsInFrontend: 'not_detected_by_static_route_check',

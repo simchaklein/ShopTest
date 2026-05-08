@@ -3,6 +3,7 @@ export type MaxPayConfig = {
   enabled: boolean;
   diagnosticsEnabled: boolean;
   terminal: string;
+  mid: string;
   user: string;
   password: string;
   endpoint: string;
@@ -12,7 +13,6 @@ export type MaxPayConfig = {
   notifyUrl: string;
 };
 
-const DEFAULT_TEST_ENDPOINT = 'https://pay.hyp.co.il/cgi-bin/yaadpay/yaadpay.pl';
 
 function readFlag(name: string, defaultValue: boolean) {
   const value = process.env[name];
@@ -46,9 +46,10 @@ export function getMaxPayConfig(req?: { headers?: { host?: string | string[]; 'x
     enabled: readFlag('MAXPAY_ENABLE_CORE_CHECKOUT', true),
     diagnosticsEnabled: readFlag('MAXPAY_ENABLE_DIAGNOSTICS', true),
     terminal: process.env.HYP_TERMINAL || '',
+    mid: process.env.HYP_MID || '',
     user: process.env.HYP_USER || '',
     password: process.env.HYP_PASSWORD || '',
-    endpoint: process.env.HYP_ENDPOINT || DEFAULT_TEST_ENDPOINT,
+    endpoint: process.env.HYP_ENDPOINT || '',
     successUrl: process.env.MAXPAY_SUCCESS_URL || requiredUrl(baseUrl, '/payment/success'),
     failedUrl: process.env.MAXPAY_FAILED_URL || requiredUrl(baseUrl, '/payment/failed'),
     cancelUrl: process.env.MAXPAY_CANCEL_URL || requiredUrl(baseUrl, '/payment/cancel'),
@@ -59,6 +60,7 @@ export function getMaxPayConfig(req?: { headers?: { host?: string | string[]; 'x
 export function getMissingMaxPayEnv(config = getMaxPayConfig()) {
   const missing = [];
   if (!config.terminal) missing.push('HYP_TERMINAL');
+  if (!config.mid) missing.push('HYP_MID');
   if (!config.user) missing.push('HYP_USER');
   if (!config.password) missing.push('HYP_PASSWORD');
   if (!config.endpoint) missing.push('HYP_ENDPOINT');

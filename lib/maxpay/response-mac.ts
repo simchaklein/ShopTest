@@ -1,16 +1,33 @@
 import crypto from 'crypto';
 
-function normalizeValue(value: unknown) {
-  if (value === undefined || value === null) return '';
+function normalizeValue(value: unknown, fallback = '') {
+  if (value === undefined || value === null || value === '') return fallback;
   return String(value);
 }
 
-export function buildResponseMacPayload(params: Record<string, unknown>, fields: string[]) {
-  return fields.map((field) => normalizeValue(params[field])).join('');
+function readParam(params: Record<string, unknown>, names: string[], fallback = '') {
+  for (const name of names) {
+    const value = params[name];
+    if (value !== undefined && value !== null && value !== '') return String(value);
+  }
+  return fallback;
 }
 
-export function signHypPayload(payload: string, secret: string) {
-  return crypto.createHmac('sha256', secret).update(payload, 'utf8').digest('hex');
+export function buildResponseMacPayload(params: Record<string, unknown>, merchantPassword: string) {
+  return [
+    merchantPassword,
+    readParam(params, ['txId', 'TxId', 'txID', 'transactionId']),
+    readParam(params, ['errorCode', 'ErrorCode'], '000'),
+    readParam(params, ['cardToken', 'CardToken']),
+    readParam(params, ['cardExp', 'CardExp']),
+    readParam(params, ['personalId', 'PersonalId', 'personalID']),
+    readParam(params, ['uniqueId', 'uniqueid', 'UniqueId', 'uniqueID', 'Order', 'order', 'orderId']),
+  ].map((value) => normalizeValue(value)).join('');
+}
+
+export function calculateResponseMac(params: Record<string, unknown>, merchantPassword: string) {
+  const payload = buildResponseMacPayload(params, merchantPassword);
+  return crypto.createHash('sha256').update(payload, 'utf8').digest('base64');
 }
 
 export function timingSafeEqualText(left: string, right: string) {
@@ -20,32 +37,20 @@ export function timingSafeEqualText(left: string, right: string) {
   return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
-export function validateResponseMac(params: Record<string, unknown>, secret: string) {
-  const responseMac = normalizeValue(params.responseMac || params.ResponseMac || params.MAC);
-  if (!responseMac || !secret) {
+export function validateResponseMac(params: Record<string, unknown>, merchantPassword: string) {
+  const responseMac = readParam(params, ['responseMac', 'ResponseMac', 'MAC']);
+  if (!responseMac || !merchantPassword) {
     return {
       valid: false,
       reason: responseMac ? 'missing_secret' : 'missing_response_mac',
     };
   }
 
-  const macFields = normalizeValue(params.MacFields || params.macFields)
-    .split(',')
-    .map((field) => field.trim())
-    .filter(Boolean);
-
-  if (macFields.length === 0) {
-    return {
-      valid: false,
-      reason: 'missing_mac_fields',
-    };
-  }
-
-  const payload = buildResponseMacPayload(params, macFields);
-  const expected = signHypPayload(payload, secret);
+  const expected = calculateResponseMac(params, merchantPassword);
+  const valid = timingSafeEqualText(expected, responseMac);
 
   return {
-    valid: timingSafeEqualText(expected, responseMac),
-    reason: timingSafeEqualText(expected, responseMac) ? 'ok' : 'mac_mismatch',
+    valid,
+    reason: valid ? 'ok' : 'mac_mismatch',
   };
 }

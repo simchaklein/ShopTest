@@ -11,8 +11,9 @@ function readParam(source: Record<string, any>, names: string[]) {
 }
 
 function isApproved(source: Record<string, any>) {
-  const status = readParam(source, ['CCode', 'ccode', 'Status', 'status']);
-  return status === '0' || status.toLowerCase() === 'approved' || status.toLowerCase() === 'success';
+  const errorCode = readParam(source, ['errorCode', 'ErrorCode']);
+  const status = readParam(source, ['status', 'Status', 'CCode', 'ccode']);
+  return errorCode === '000' || status === '000' || status === '0' || status.toLowerCase() === 'approved' || status.toLowerCase() === 'success';
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -25,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ...(req.method === 'POST' && typeof req.body === 'object' ? req.body : {}),
   };
 
-  const orderId = readParam(payload, ['Order', 'order', 'OrderId', 'orderId']);
+  const orderId = readParam(payload, ['uniqueId', 'uniqueid', 'UniqueId', 'uniqueID', 'Order', 'order', 'OrderId', 'orderId']);
   const config = getMaxPayConfig(req);
   const macResult = validateResponseMac(payload, config.password);
   const approved = isApproved(payload);
@@ -40,8 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         lastCallbackAt: new Date().toISOString(),
         responseMacValid: macResult.valid,
         responseMacReason: macResult.reason,
-        hypTransactionId: readParam(payload, ['Id', 'id', 'ACode', 'TransId']),
-        hypStatusCode: readParam(payload, ['CCode', 'ccode', 'Status', 'status']),
+        hypTransactionId: readParam(payload, ['txId', 'TxId', 'transactionId', 'Id', 'id', 'ACode', 'TransId']),
+        hypStatusCode: readParam(payload, ['errorCode', 'ErrorCode', 'status', 'Status', 'CCode', 'ccode']),
       },
     });
   }
