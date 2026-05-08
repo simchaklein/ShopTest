@@ -20,6 +20,12 @@ function readFlag(name: string, defaultValue: boolean) {
   return value === 'true' || value === '1';
 }
 
+function hasUsableEnvValue(value: string) {
+  if (!value) return false;
+  const normalized = value.trim().toUpperCase();
+  return !normalized.startsWith('PLACEHOLDER_') && !normalized.startsWith('YOUR_');
+}
+
 function requiredUrl(baseUrl: string, path: string) {
   if (!baseUrl) return '';
   return new URL(path, baseUrl).toString();
@@ -59,10 +65,10 @@ export function getMaxPayConfig(req?: { headers?: { host?: string | string[]; 'x
 
 export function getMissingMaxPayEnv(config = getMaxPayConfig()) {
   const missing = [];
-  if (!config.terminal) missing.push('HYP_TERMINAL');
-  if (!config.mid) missing.push('HYP_MID');
-  if (!config.user) missing.push('HYP_USER');
-  if (!config.password) missing.push('HYP_PASSWORD');
-  if (!config.endpoint) missing.push('HYP_ENDPOINT');
+  if (!hasUsableEnvValue(config.terminal)) missing.push('HYP_TERMINAL');
+  if (!hasUsableEnvValue(config.mid)) missing.push('HYP_MID');
+  if (!hasUsableEnvValue(config.user)) missing.push('HYP_USER');
+  if (!hasUsableEnvValue(config.password)) missing.push('HYP_PASSWORD');
+  if (!hasUsableEnvValue(config.endpoint)) missing.push('HYP_ENDPOINT');
   return missing;
 }
