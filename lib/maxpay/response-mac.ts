@@ -25,9 +25,9 @@ export function buildResponseMacPayload(params: Record<string, unknown>, merchan
   ].map((value) => normalizeValue(value)).join('');
 }
 
-export function calculateResponseMac(params: Record<string, unknown>, merchantPassword: string) {
+export function calculateResponseMac(params: Record<string, unknown>, merchantPassword: string, encoding: 'base64' | 'hex' = 'base64') {
   const payload = buildResponseMacPayload(params, merchantPassword);
-  return crypto.createHash('sha256').update(payload, 'utf8').digest('base64');
+  return crypto.createHash('sha256').update(payload, 'utf8').digest(encoding);
 }
 
 export function timingSafeEqualText(left: string, right: string) {
@@ -46,8 +46,9 @@ export function validateResponseMac(params: Record<string, unknown>, merchantPas
     };
   }
 
-  const expected = calculateResponseMac(params, merchantPassword);
-  const valid = timingSafeEqualText(expected, responseMac);
+  const expectedBase64 = calculateResponseMac(params, merchantPassword, 'base64');
+  const expectedHex = calculateResponseMac(params, merchantPassword, 'hex');
+  const valid = timingSafeEqualText(expectedBase64, responseMac) || timingSafeEqualText(expectedHex, responseMac);
 
   return {
     valid,
