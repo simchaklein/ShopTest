@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getOrderById, updateOrderById } from '../../../lib/db';
-import { buildMaxPayPaymentUrl } from '../../../lib/maxpay/payment-request';
+import { createMaxPayPaymentRequest } from '../../../lib/maxpay/payment-request';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    const paymentUrl = buildMaxPayPaymentUrl(order, req);
+    const { paymentUrl } = await createMaxPayPaymentRequest(order, req);
 
     await updateOrderById(order.id, {
       paymentProvider: 'maxpay_hyp',

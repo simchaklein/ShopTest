@@ -1,4 +1,5 @@
 import type { NextApiRequest } from 'next';
+import { randomUUID } from 'crypto';
 import { getMaxPayConfig, getMissingMaxPayEnv } from './config';
 
 type OrderItem = {
@@ -18,15 +19,73 @@ type ShopTestOrder = {
   items?: OrderItem[];
 };
 
+function escapeXml(value: unknown) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 function trimText(value: string, maxLength: number) {
   return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
 }
 
-function formatAmount(amount: number) {
-  return Number(amount || 0).toFixed(2);
+function toAgorot(amount: number) {
+  return String(Math.round(Number(amount || 0) * 100));
 }
 
-export function buildMaxPayPaymentUrl(order: ShopTestOrder, req: NextApiRequest) {
+function extractHostedPaymentUrl(responseText: string) {
+  const match = responseText.match(/<mpiHostedPageUrl>([^<]+)<\/mpiHostedPageUrl>/i)
+    || responseText.match(/<paymentUrl>([^<]+)<\/paymentUrl>/i)
+    || responseText.match(/https?:\/\/[^\s<"]+/i);
+
+  if (!match) return '';
+  return match[1] || match[0];
+}
+
+function buildTxnSetupXml(order: ShopTestOrder, req: NextApiRequest) {
+  const config = getMaxPayConfig(req);
+  const itemSummary = trimText(
+    (order.items || []).map((item) => `${item.name} x ${item.quantity}`).join(', ') || `ShopTest order ${order.id}`,
+    120
+  );
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<ashrait>
+  <request>
+    <version>2000</version>
+    <language>HEB</language>
+    <command>doDeal</command>
+    <doDeal>
+      <terminalNumber>${escapeXml(config.terminal)}</terminalNumber>
+      <cardNo>CGMPI</cardNo>
+      <total>${escapeXml(toAgorot(order.total))}</total>
+      <transactionType>Debit</transactionType>
+      <creditType>RegularCredit</creditType>
+      <currency>ILS</currency>
+      <transactionCode>Internet</transactionCode>
+      <validation>TxnSetup</validation>
+      ${process.env.HYP_MID ? `<mid>${escapeXml(process.env.HYP_MID)}</mid>` : ''}
+      <uniqueid>${escapeXml(order.id || randomUUID())}</uniqueid>
+      <mpiValidation>AutoComm</mpiValidation>
+      <description>${escapeXml(itemSummary)}</description>
+      <customerData>
+        <userData1>${escapeXml(order.customer?.email || order.email || '')}</userData1>
+        <userData2>${escapeXml(order.customer?.fullName || '')}</userData2>
+        <userData3>${escapeXml(order.customer?.phone || '')}</userData3>
+      </customerData>
+      <successUrl>${escapeXml(config.successUrl)}</successUrl>
+      <errorUrl>${escapeXml(config.failedUrl)}</errorUrl>
+      <cancelUrl>${escapeXml(config.cancelUrl)}</cancelUrl>
+      <notifyUrl>${escapeXml(config.notifyUrl)}</notifyUrl>
+    </doDeal>
+  </request>
+</ashrait>`;
+}
+
+export async function createMaxPayPaymentRequest(order: ShopTestOrder, req: NextApiRequest) {
   const config = getMaxPayConfig(req);
   const missing = getMissingMaxPayEnv(config);
 
@@ -38,35 +97,32 @@ export function buildMaxPayPaymentUrl(order: ShopTestOrder, req: NextApiRequest)
     throw new Error(`Missing Max Pay env vars: ${missing.join(', ')}`);
   }
 
-  const url = new URL(config.endpoint);
-  const customerName = order.customer?.fullName || 'ShopTest Customer';
-  const email = order.customer?.email || order.email || '';
-  const phone = order.customer?.phone || '';
-  const itemSummary = trimText(
-    (order.items || []).map((item) => `${item.name} x ${item.quantity}`).join(', ') || `ShopTest order ${order.id}`,
-    120
-  );
+  const body = new URLSearchParams({
+    user: config.user,
+    password: config.password,
+    int_in: buildTxnSetupXml(order, req),
+  });
 
-  url.searchParams.set('action', 'pay');
-  url.searchParams.set('Masof', config.terminal);
-  url.searchParams.set('Amount', formatAmount(order.total));
-  url.searchParams.set('Coin', '1');
-  url.searchParams.set('Info', itemSummary);
-  url.searchParams.set('Order', order.id);
-  url.searchParams.set('ClientName', trimText(customerName, 80));
-  url.searchParams.set('email', email);
-  url.searchParams.set('phone', phone);
-  url.searchParams.set('UTF8', 'True');
-  url.searchParams.set('UTF8out', 'True');
-  url.searchParams.set('MoreData', 'True');
-  url.searchParams.set('SendHesh', 'False');
-  url.searchParams.set('PageLang', 'HEB');
-  url.searchParams.set('PassP', config.password);
-  url.searchParams.set('UserId', config.user);
-  url.searchParams.set('SuccessUrl', config.successUrl);
-  url.searchParams.set('ErrorUrl', config.failedUrl);
-  url.searchParams.set('CancelUrl', config.cancelUrl);
-  url.searchParams.set('NotifyUrl', config.notifyUrl);
+  const response = await fetch(config.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+    },
+    body,
+  });
 
-  return url.toString();
+  const responseText = await response.text();
+  const paymentUrl = extractHostedPaymentUrl(responseText);
+
+  if (!response.ok || !paymentUrl) {
+    throw new Error('Hyp did not return a hosted payment URL');
+  }
+
+  return {
+    paymentUrl,
+    providerResponse: {
+      status: response.status,
+      hasHostedUrl: Boolean(paymentUrl),
+    },
+  };
 }
