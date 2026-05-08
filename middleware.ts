@@ -36,12 +36,6 @@ function parseBasicAuth(header: string | null) {
 }
 
 export function middleware(request: NextRequest) {
-  const isPublicPreview = process.env.VERCEL_ENV === 'preview' || process.env.SHOPTEST_DISABLE_BASIC_AUTH === 'true';
-
-  if (isPublicPreview) {
-    return NextResponse.next();
-  }
-
   const credentials = parseBasicAuth(request.headers.get('authorization'));
   const expectedUsername = process.env.SHOPTEST_BASIC_AUTH_USERNAME || DEFAULT_TEST_CREDENTIAL;
   const expectedPassword = process.env.SHOPTEST_BASIC_AUTH_PASSWORD || DEFAULT_TEST_CREDENTIAL;
@@ -57,7 +51,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
-  ],
+  matcher: ['/admin/:path*'],
 };
