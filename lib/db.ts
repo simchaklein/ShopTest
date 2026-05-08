@@ -119,3 +119,21 @@ export async function getOrderById(orderId: string) {
   const orders = await getOrders();
   return orders.find((o: any) => o.id === orderId);
 }
+
+export async function updateOrderById(orderId: string, updates: Record<string, any>) {
+  const orders = await getOrders();
+  const index = orders.findIndex((order: any) => order.id === orderId);
+
+  if (index === -1) {
+    return null;
+  }
+
+  orders[index] = {
+    ...orders[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await writeJSON('orders.json', orders);
+  return orders[index];
+}

@@ -63,8 +63,20 @@ export default function Checkout() {
         throw new Error(data.error || 'Could not create order');
       }
 
+      const paymentRes = await fetch('/api/max-pay/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: data.order.id })
+      });
+
+      const paymentData = await paymentRes.json();
+
+      if (!paymentRes.ok || !paymentData.paymentUrl) {
+        throw new Error(paymentData.error || 'Could not start Max Pay checkout');
+      }
+
       clearCart();
-      router.push(`/orders?orderId=${data.order.id}`);
+      window.location.href = paymentData.paymentUrl;
     } catch (err: any) {
       setError(err.message || 'An error occurred while creating your order');
     } finally {
@@ -195,7 +207,7 @@ export default function Checkout() {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-xl font-bold">Payment</h2>
-                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest mt-1">Stripe Checkout will be connected here.</p>
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest mt-1">Max Pay / Hyp hosted checkout is connected here.</p>
                   </div>
                   <Lock className="w-5 h-5 text-secondary" />
                 </div>
@@ -208,8 +220,7 @@ export default function Checkout() {
                     <div>
                       <p className="font-bold text-primary mb-2">Ready for hosted payment</p>
                       <p className="text-sm text-muted leading-relaxed">
-                        Card details are not collected by this store. When Stripe is connected,
-                        customers will continue to a secure hosted payment step after the order is created.
+                        Card details are not collected by this store. After the order is created, customers continue to the secure Max Pay / Hyp hosted payment page.
                       </p>
                     </div>
                   </div>

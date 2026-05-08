@@ -95,7 +95,7 @@ export default async function handler(
       total,
       currency: 'ILS',
       paymentStatus: 'pending_payment',
-      paymentProvider: 'pending',
+      paymentProvider: 'maxpay_hyp',
       createdAt: new Date().toISOString(),
       status: 'awaiting_payment'
     };
@@ -105,7 +105,7 @@ export default async function handler(
     res.status(200).json({
       success: true,
       order,
-      message: 'Order created and ready for hosted payment'
+      message: 'Order created and ready for Max Pay hosted payment'
     });
   } catch (error) {
     console.error('Checkout error:', error);
