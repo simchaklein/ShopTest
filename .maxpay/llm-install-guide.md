@@ -44,6 +44,12 @@ Use variable names only here. Do not write secret values into this guide.
 - HYP_PASSWORD
 - HYP_MID
 - HYP_ENDPOINT
+- HYP_PASSP
+- HYP_API_KEY
+- HYP_PAYMENT_PAGE_URL
+- MAXPAY_ENABLE_TRANSACTION_INQUIRY
+- MAXPAY_ENABLE_REFUNDS
+- MAXPAY_PROVIDER_MODE
 
 ## Changing Hyp / Max Pay Settings Later
 
@@ -100,6 +106,41 @@ Also update these with production values from Hyp/Max:
 
 Credentials are controlled through env only. Callback URLs are controlled through env only. Features are controlled through flags. Use this guide for future prompts. Never hardcode Hyp credentials.
 
+## Provider Modes
+
+This integration supports two provider modes.
+
+### Mode A: yaadpay_hosted
+Use this mode for the current ShopTest hosted payment-page test when the Hyp panel provides a test terminal, hosted payment page settings, API Key, and PassP-style page authentication.
+
+Required env variable names:
+
+- MAXPAY_PROVIDER_MODE=yaadpay_hosted
+- HYP_PAYMENT_PAGE_URL
+- HYP_TERMINAL
+- HYP_API_KEY
+- HYP_PASSP
+- MAXPAY_SUCCESS_URL
+- MAXPAY_FAILED_URL
+- MAXPAY_CANCEL_URL
+- MAXPAY_NOTIFY_URL
+
+API Key and PassP must stay server-side or inside the Hyp panel settings. Do not hardcode them and do not expose them in frontend code.
+
+### Mode B: hyp_relay_api
+Use this mode later for full Hyp API coverage when Relay credentials are available.
+
+Required env variable names:
+
+- MAXPAY_PROVIDER_MODE=hyp_relay_api
+- HYP_ENDPOINT
+- HYP_USER
+- HYP_PASSWORD
+- HYP_TERMINAL
+- HYP_MID
+
+Relay API mode is expected to support deeper API operations such as transaction inquiry, refunds/cancellations, invoices/documents, and recurring/tokenization when the terminal and credentials support them.
+
 ## Git/state warning
 `.maxpay/install-state.json` is local Max Pay installation state. It contains no secrets, but it is normally recommended not to commit it. If it is deleted or corrupted after token binding, you may need to request/register for a new install token.
 
@@ -108,6 +149,90 @@ Credentials are controlled through env only. Callback URLs are controlled throug
 - Open `/payment/test` to view local ShopTest diagnostics.
 - Use Hyp TEST credentials only.
 - Do not use real card/customer data in this QA app.
+
+## Future Hyp API Capabilities
+
+These capabilities are scaffolded or planned, but most are disabled by default until the terminal, credentials, and diagnostics confirm support.
+
+### Core checkout
+Hosted payment page, payment request creation, redirect/payment URL, success/fail/cancel routes.
+
+### Notify / callback
+Server-side callback route that updates local payment status and keeps logs safe.
+
+### responseMac validation
+Server-side integrity validation for return/callback responses. Never fake success.
+
+### Transaction status / inquiry
+Planned for Relay/API mode. Should return only a sanitized transaction summary.
+
+### Refunds / cancellations
+Planned as admin-only operations, disabled by default, with explicit confirmation.
+
+### Documents / invoices
+Scaffolded and feature-flagged. Do not mark active unless the terminal has invoice/document support and invoice API calls are tested.
+
+### Recurring / tokenization
+Scaffolded and feature-flagged. Do not store card data. Do not add automatic future charges until terminal support is verified.
+
+### Digital wallets
+Apple Pay / Google Pay infrastructure is feature-flagged. Enable only if Hyp terminal settings support it.
+
+### Future prompts
+
+Prompt: Enable invoices
+
+```text
+Enable Hyp invoices/documents for this Max Pay integration. Check if the terminal has invoice/EZcount support enabled. Add required env/config only, do not hardcode secrets, and run diagnostics.
+```
+
+Prompt: Get invoice link
+
+```text
+Check whether this transaction has an invoice and retrieve the safe invoice link if supported by Hyp. Do not expose credentials or full payment payloads.
+```
+
+Prompt: Enable recurring
+
+```text
+Enable recurring payments for this Max Pay integration. Use the installed recurring infrastructure. Verify Hyp terminal tokenization support first. Do not store card data.
+```
+
+Prompt: Check transaction status
+
+```text
+Check the status of a Max Pay / Hyp transaction using the installed integration. Use safe server-side API calls only and return a sanitized summary.
+```
+
+Prompt: Add refund flow
+
+```text
+Add a safe admin-only refund flow for this Max Pay / Hyp integration. Keep it disabled by default, require confirmation, and do not expose credentials.
+```
+
+Prompt: Enable Apple Pay / Google Pay
+
+```text
+Enable Apple Pay / Google Pay using the existing Max Pay infrastructure. Check which Hyp terminal settings are required, update feature flags, and run diagnostics.
+```
+
+Prompt: Switch provider mode
+
+```text
+Switch this integration between yaadpay_hosted and hyp_relay_api mode. Explain which env variables are required for each mode and do not hardcode credentials.
+```
+
+Prompt: Switch test to production
+
+```text
+Switch this Max Pay / Hyp integration from test mode to production. Show exactly which env variables must change. Do not modify unrelated payment logic and do not hardcode secrets.
+```
+
+Prompt: Run diagnostics
+
+```text
+Run Max Pay diagnostics. Check provider mode, env vars, callback URLs, responseMac, frontend secrets, feature flags, transaction inquiry support, invoice support, recurring support, and payment routes.
+```
 
 ## Useful prompts for future maintenance
 

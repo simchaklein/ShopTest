@@ -85,6 +85,30 @@ function buildTxnSetupXml(order: ShopTestOrder, req: NextApiRequest) {
 </ashrait>`;
 }
 
+function buildYaadPayHostedUrl(order: ShopTestOrder, req: NextApiRequest) {
+  const config = getMaxPayConfig(req);
+  const params = new URLSearchParams({
+    Masof: config.terminal,
+    Amount: String(Number(order.total || 0).toFixed(2)),
+    Order: order.id || randomUUID(),
+    Info: trimText(
+      (order.items || []).map((item) => `${item.name} x ${item.quantity}`).join(', ') || `ShopTest order ${order.id}`,
+      120
+    ),
+    UTF8: 'True',
+    UTF8out: 'True',
+    MoreData: 'True',
+  });
+
+  if (order.customer?.email || order.email) params.set('email', order.customer?.email || order.email || '');
+  if (order.customer?.fullName) params.set('ClientName', order.customer.fullName);
+  if (order.customer?.phone) params.set('phone', order.customer.phone);
+
+  const url = new URL(config.paymentPageUrl);
+  params.forEach((value, key) => url.searchParams.set(key, value));
+  return url.toString();
+}
+
 export async function createMaxPayPaymentRequest(order: ShopTestOrder, req: NextApiRequest) {
   const config = getMaxPayConfig(req);
   const missing = getMissingMaxPayEnv(config);
@@ -95,6 +119,22 @@ export async function createMaxPayPaymentRequest(order: ShopTestOrder, req: Next
 
   if (missing.length > 0) {
     throw new Error(`Missing Max Pay env vars: ${missing.join(', ')}`);
+  }
+
+  if (config.providerMode === 'yaadpay_hosted') {
+    if (config.apiKey || config.passp) {
+      // API Key / PassP are intentionally not added to the browser redirect URL.
+      // The Hyp panel should hold hosted-page authentication and callback settings.
+    }
+
+    return {
+      paymentUrl: buildYaadPayHostedUrl(order, req),
+      providerResponse: {
+        status: 200,
+        hasHostedUrl: true,
+        providerMode: config.providerMode,
+      },
+    };
   }
 
   const body = new URLSearchParams({
@@ -123,6 +163,7 @@ export async function createMaxPayPaymentRequest(order: ShopTestOrder, req: Next
     providerResponse: {
       status: response.status,
       hasHostedUrl: Boolean(paymentUrl),
+      providerMode: config.providerMode,
     },
   };
 }
