@@ -6,7 +6,6 @@ const requiredRoutes = [
   '/payment/success',
   '/payment/failed',
   '/payment/cancel',
-  '/payment/test',
   '/terms',
   '/api/max-pay/checkout',
   '/api/max-pay/notify',

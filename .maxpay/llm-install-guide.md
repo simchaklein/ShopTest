@@ -1,136 +1,70 @@
-# Max Pay Local Installer Guide
+# מדריך אינטגרציית Max Pay / Hyp
 
-## What was installed
-Max Pay / Hyp test-mode integration foundation for ShopTest.
+## 1. מטרת המסמך
 
-## Project stack
-- Framework: Next.js
-- Routing model: Pages Router
-- Backend available: yes, via `pages/api/*`
+המסמך נוצר בתוך פרויקט הלקוח ומיועד למפתח או לסוכן קוד עתידי. הוא מסביר איך אינטגרציית הסליקה בנויה, איך לתחזק אותה בבטחה, ואיפה לשנות הגדרות בלי לחשוף סודות.
 
-## Installed files and routes
-- `lib/maxpay/config.ts`
-- `lib/maxpay/payment-request.ts`
-- `lib/maxpay/response-mac.ts`
-- `lib/maxpay/recurring.ts`
-- `lib/maxpay/invoices.ts`
-- `lib/maxpay/wallets.ts`
-- `pages/api/max-pay/checkout.ts`
-- `pages/api/max-pay/notify.ts`
-- `pages/api/max-pay/diagnostics.ts`
-- `pages/payment/success.tsx`
-- `pages/payment/failed.tsx`
-- `pages/payment/cancel.tsx`
-- `pages/payment/test.tsx`
-- `pages/terms.tsx`
+זהו מסמך לקוח בלבד. הוא לא מסמך פנימי של Max Pay.
 
-## Environment variables
-Use variable names only here. Do not write secret values into this guide.
+## 2. סיכום התקנה
 
-- MAXPAY_ENV
-- MAXPAY_ENABLE_CORE_CHECKOUT
-- MAXPAY_ENABLE_RECURRING
-- MAXPAY_ENABLE_INVOICES
-- MAXPAY_ENABLE_APPLE_PAY
-- MAXPAY_ENABLE_GOOGLE_PAY
-- MAXPAY_ENABLE_DIAGNOSTICS
-- MAXPAY_PUBLIC_BASE_URL
-- MAXPAY_SUCCESS_URL
-- MAXPAY_FAILED_URL
-- MAXPAY_CANCEL_URL
-- MAXPAY_NOTIFY_URL
-- HYP_TERMINAL
-- HYP_USER
-- HYP_PASSWORD
-- HYP_MID
-- HYP_ENDPOINT
-- HYP_PASSP
-- HYP_API_KEY
-- HYP_PAYMENT_PAGE_URL
-- MAXPAY_ENABLE_TRANSACTION_INQUIRY
-- MAXPAY_ENABLE_REFUNDS
-- MAXPAY_PROVIDER_MODE
+- Framework: nextjs
+- Routing model: next-pages-router
+- Backend available: yes
+- Active provider mode: yaadpay_hosted
+- Diagnostics status: SKIPPED_MISSING_CREDENTIALS
+- קובץ state מקומי: .maxpay/install-state.json
+- קובץ מדריך יחיד: .maxpay/llm-install-guide.md
 
-## Changing Hyp / Max Pay Settings Later
+## 3. קבצים ונתיבים שהותקנו
 
-Use environment variables only when changing Hyp / Max Pay settings. Do not hardcode credentials in source code. Do not write credentials into .maxpay files or this guide.
+- .maxpay/install-state.json
+- .maxpay/llm-install-guide.md
+- .env.example
+- lib/maxpay/config.ts
+- lib/maxpay/payment-request.ts
+- lib/maxpay/response-mac.ts
+- lib/maxpay/recurring.ts
+- lib/maxpay/invoices.ts
+- lib/maxpay/wallets.ts
+- pages/api/max-pay/checkout.ts
+- pages/api/max-pay/notify.ts
+- pages/api/max-pay/diagnostics.ts
+- pages/payment/success.tsx
+- pages/payment/failed.tsx
+- pages/payment/cancel.tsx
+- pages/terms.tsx
 
-### Where credentials live
-- Local development: .env or .env.local.
-- Vercel / hosting: project environment variables.
-- Never in code.
-- Never in .maxpay files.
+## 4. איך עובד תהליך התשלום
 
-### Change terminal / masof
-- HYP_TERMINAL
+1. המשתמש בוחר מוצר, תוכנית או סל.
+2. ה-Frontend קורא לשרת של הפרויקט.
+3. השרת מחשב סכום ויוצר בקשת תשלום.
+4. השרת מחזיר כתובת תשלום או מפנה לעמוד Hyp.
+5. המשתמש משלים או מבטל את התשלום בעמוד Hyp.
+6. Hyp מחזיר את המשתמש ל-/payment/success, /payment/failed או /payment/cancel.
+7. Hyp שולח notify/callback ל-/api/max-pay/notify אם הוא מוגדר.
+8. השרת מאמת responseMac כאשר הנתונים קיימים.
+9. סטטוס תשלום מקומי מתעדכן לפי האימות, לא לפי redirect בלבד.
 
-### Change API user/password
-- HYP_USER
-- HYP_PASSWORD
+ה-Frontend לעולם לא מקבל credentials.
 
-### Change API endpoint
-- HYP_ENDPOINT
+## 5. Provider modes
 
-Test and production endpoints are different. Do not use the Hyp panel/login URL as the API endpoint. The API endpoint should come from Hyp API docs, the Hyp panel, or Hyp/Max onboarding, and is expected to be an API Relay endpoint such as an /xpo/Relay path when that is what Hyp provides for the terminal.
+### yaadpay_hosted
 
-### Change merchant ID if required
-- HYP_MID
-
-### Switch from test to production
-Set:
-
-- MAXPAY_ENV=production
-
-Also update these with production values from Hyp/Max:
-
-- HYP_ENDPOINT
-- HYP_TERMINAL
-- HYP_USER
-- HYP_PASSWORD
-- HYP_MID, if required
-
-### Change callback and return URLs
-- MAXPAY_PUBLIC_BASE_URL
-- MAXPAY_SUCCESS_URL
-- MAXPAY_FAILED_URL
-- MAXPAY_CANCEL_URL
-- MAXPAY_NOTIFY_URL
-
-### Enable or disable features
-- MAXPAY_ENABLE_CORE_CHECKOUT
-- MAXPAY_ENABLE_DIAGNOSTICS
-- MAXPAY_ENABLE_RECURRING
-- MAXPAY_ENABLE_INVOICES
-- MAXPAY_ENABLE_APPLE_PAY
-- MAXPAY_ENABLE_GOOGLE_PAY
-
-Credentials are controlled through env only. Callback URLs are controlled through env only. Features are controlled through flags. Use this guide for future prompts. Never hardcode Hyp credentials.
-
-## Provider Modes
-
-This integration supports two provider modes.
-
-### Mode A: yaadpay_hosted
-Use this mode for the current ShopTest hosted payment-page test when the Hyp panel provides a test terminal, hosted payment page settings, API Key, and PassP-style page authentication.
-
-Required env variable names:
+מתאים למסופים שעובדים עם Hosted payment page.
 
 - MAXPAY_PROVIDER_MODE=yaadpay_hosted
 - HYP_PAYMENT_PAGE_URL
 - HYP_TERMINAL
 - HYP_API_KEY
 - HYP_PASSP
-- MAXPAY_SUCCESS_URL
-- MAXPAY_FAILED_URL
-- MAXPAY_CANCEL_URL
-- MAXPAY_NOTIFY_URL
+- HYP_MID
 
-API Key and PassP must stay server-side or inside the Hyp panel settings. Do not hardcode them and do not expose them in frontend code.
+### hyp_relay_api
 
-### Mode B: hyp_relay_api
-Use this mode later for full Hyp API coverage when Relay credentials are available.
-
-Required env variable names:
+מתאים ל-Relay API מלא ולפעולות מתקדמות יותר.
 
 - MAXPAY_PROVIDER_MODE=hyp_relay_api
 - HYP_ENDPOINT
@@ -139,147 +73,312 @@ Required env variable names:
 - HYP_TERMINAL
 - HYP_MID
 
-Relay API mode is expected to support deeper API operations such as transaction inquiry, refunds/cancellations, invoices/documents, and recurring/tokenization when the terminal and credentials support them.
+כללים:
 
-## Git/state warning
-`.maxpay/install-state.json` is local Max Pay installation state. It contains no secrets, but it is normally recommended not to commit it. If it is deleted or corrupted after token binding, you may need to request/register for a new install token.
+- לא לנחש provider mode.
+- לא להשתמש בכתובת פאנל Hyp בתור endpoint.
+- לא להשתמש בפרטי login של הפאנל כ-API credentials בלי אישור מפורש מהפאנל או מהתיעוד.
+- אם המיפוי לא ברור, עוצרים ומבקשים מיפוי.
 
-## Testing
-- Run `npm run build` before deploy.
-- Open `/payment/test` to view local ShopTest diagnostics.
-- Use Hyp TEST credentials only.
-- Do not use real card/customer data in this QA app.
+## 6. משתני סביבה
 
-## Future Hyp API Capabilities
+| Env Key | תפקיד | הערה |
+| --- | --- | --- |
+| MAXPAY_ENV | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_PROVIDER_MODE | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_CORE_CHECKOUT | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_DIAGNOSTICS | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_RECURRING | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_INVOICES | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_APPLE_PAY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_GOOGLE_PAY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_REFUNDS | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_ENABLE_TRANSACTION_INQUIRY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_PUBLIC_BASE_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_SUCCESS_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_FAILED_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_CANCEL_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| MAXPAY_NOTIFY_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_PAYMENT_PAGE_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_ENDPOINT | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_TERMINAL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_USER | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_PASSWORD | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_API_KEY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_PASSP | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_MID | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
 
-These capabilities are scaffolded or planned, but most are disabled by default until the terminal, credentials, and diagnostics confirm support.
+כל הערכים נשמרים ב-.env מקומי או ב-hosting env בלבד. אין לשמור values במסמך הזה.
 
-### Core checkout
-Hosted payment page, payment request creation, redirect/payment URL, success/fail/cancel routes.
+## 7. API contracts
 
-### Notify / callback
-Server-side callback route that updates local payment status and keeps logs safe.
+### POST /api/max-pay/checkout
 
-### responseMac validation
-Server-side integrity validation for return/callback responses. Never fake success.
+- server-side בלבד.
+- מחשב או מקבל order קיים מהשרת.
+- בונה בקשת תשלום.
+- מחזיר redirect/payment URL בלבד.
+- לא מחזיר credentials.
 
-### Transaction status / inquiry
-Planned for Relay/API mode. Should return only a sanitized transaction summary.
+### /api/max-pay/notify
 
-### Refunds / cancellations
-Planned as admin-only operations, disabled by default, with explicit confirmation.
+- חייב להיות ציבורי ונגיש ל-Hyp.
+- לא מוגן בסיסמה.
+- מאמת responseMac אם נדרש.
+- לא שומר payload רגיש.
 
-### Documents / invoices
-Scaffolded and feature-flagged. Do not mark active unless the terminal has invoice/document support and invoice API calls are tested.
+### /payment/success, /payment/failed, /payment/cancel
 
-### Recurring / tokenization
-Scaffolded and feature-flagged. Do not store card data. Do not add automatic future charges until terminal support is verified.
+- עמודי UI בלבד.
+- redirect לעמוד success לא מוכיח תשלום סופי ללא notify/callback או אימות מתאים.
 
-### Digital wallets
-Apple Pay / Google Pay infrastructure is feature-flagged. Enable only if Hyp terminal settings support it.
+## 8. התאמה לקוד קיים
 
-### Future prompts
+- לא למחוק Stripe, PayPal או provider קיים בלי אישור.
+- לא ליצור duplicate routes.
+- לא לדרוס checkout מותאם אישית בשקט.
+- להשתמש ב-feature flags או provider switch כאשר יש יותר מספק אחד.
 
-Prompt: Enable invoices
+## 9. מה סוכן קוד רשאי לשנות לבד
+
+מותר:
+
+- להתאים imports ונתיבים.
+- ליצור route חסר לפי framework קיים.
+- להוסיף env placeholders.
+- לתקן קבצים חסרים של diagnostics או docs.
+- לשפר טקסטים ועיצוב של עמודי payment.
+- להריץ diagnostics.
+
+אסור בלי אישור מפורש:
+
+- להכניס credentials לקוד או ל-Frontend.
+- לעבור ל-production.
+- לשנות responseMac.
+- לסמן תשלום כהצליח בלי אימות.
+- להפעיל recurring live.
+- לבצע refunds.
+- למחוק provider קיים.
+
+## 10. אבטחת credentials
+
+- רק server env או hosting env.
+- לא ב-Frontend.
+- לא ב-localStorage.
+- לא ב-public env.
+- לא בקבצי .maxpay.
+- לא בלוגים.
+- לא ב-client bundle.
+
+## 11. דיאגנוסטיקה
+
+סטטוסים:
+
+- PASS
+- PASS_WITH_WARNINGS
+- FAIL
+- SKIPPED_MISSING_CREDENTIALS
+
+בדיקות אחרונות:
+
+- routes_pages_exist: PASS - Required Max Pay routes/pages exist
+- env_placeholders_exist: PASS - Required env placeholders exist
+- response_mac_helper_exists: PASS - responseMac helper exists
+- callback_notify_exists: PASS - callback/notify route exists
+- frontend_secret_scan: PASS - No obvious frontend secret markers found
+- provider_conflicts: PASS - No provider conflicts detected
+- sandbox_credentials: SKIPPED_MISSING_CREDENTIALS - Missing env vars: HYP_PAYMENT_PAGE_URL, HYP_TERMINAL
+- framework_detected: PASS - nextjs/next-pages-router
+
+## 12. מעבר מטסט לפרודקשן
+
+Checklist:
+
+- MAXPAY_ENV
+- MAXPAY_PROVIDER_MODE אם נדרש
+- HYP_PAYMENT_PAGE_URL או HYP_ENDPOINT
+- credentials מתאימים
+- HYP_TERMINAL
+- HYP_MID אם נדרש
+- MAXPAY_PUBLIC_BASE_URL
+- MAXPAY_SUCCESS_URL
+- MAXPAY_FAILED_URL
+- MAXPAY_CANCEL_URL
+- MAXPAY_NOTIFY_URL
+- diagnostics
+- עסקת בדיקה לפי נהלי Hyp
+
+## 13. יכולות מתקדמות
+
+- Recurring: תשתית קיימת וכבויה. דורש תמיכת tokenization. אין שמירת card data.
+- Invoices: דורש מודול חשבוניות. כבוי כברירת מחדל.
+- Apple Pay / Google Pay: תלוי במסוף. כבוי כברירת מחדל.
+- Refunds: עתידי, server/admin-side בלבד, דורש אישור מפורש.
+- Transaction inquiry: server-side בלבד ותקציר מסונן בלבד.
+
+## 14. קונפליקטים ומדיניות שינוי
+
+קונפליקטים שזוהו:
+
+- לא זוהו פריטים.
+
+מדיניות migration:
+
+Detect -> Preserve -> Configure safely
+
+## 15. פרומטים מוכנים לתחזוקה
+
+### הרצת דיאגנוסטיקה
 
 ```text
-Enable Hyp invoices/documents for this Max Pay integration. Check if the terminal has invoice/EZcount support enabled. Add required env/config only, do not hardcode secrets, and run diagnostics.
+הרץ diagnostics לאינטגרציית Max Pay / Hyp בפרויקט הזה. בדוק env, routes, callback/notify, responseMac, עמודי תשלום, קונפליקטים עם ספקי סליקה קיימים, חשיפת סודות ב-Frontend וסטטוס build. החזר PASS / PASS_WITH_WARNINGS / FAIL / SKIPPED_MISSING_CREDENTIALS. אל תמחק או תדרוס קוד קיים.
 ```
 
-Prompt: Get invoice link
+### מעבר לייצור
 
 ```text
-Check whether this transaction has an invoice and retrieve the safe invoice link if supported by Hyp. Do not expose credentials or full payment payloads.
+העבר את אינטגרציית Max Pay / Hyp ממצב test למצב production. אל תקשיח סודות בקוד. הראה אילו משתני סביבה צריך לשנות מקומית וב-hosting. אל תשנה לוגיקת תשלום לא קשורה. אחרי השינוי הרץ diagnostics וסכם סיכונים לפני עלייה לאוויר.
 ```
 
-Prompt: Enable recurring
+### עדכון מסוף / masof
 
 ```text
-Enable recurring payments for this Max Pay integration. Use the installed recurring infrastructure. Verify Hyp terminal tokenization support first. Do not store card data.
+עדכן את הגדרת terminal / masof של Hyp עבור האינטגרציה הקיימת. השתמש רק במשתני סביבה כמו HYP_TERMINAL. אל תקשיח credentials ואל תשנה לוגיקת checkout לא קשורה. לאחר העדכון הרץ diagnostics.
 ```
 
-Prompt: Check transaction status
+### עדכון credentials
 
 ```text
-Check the status of a Max Pay / Hyp transaction using the installed integration. Use safe server-side API calls only and return a sanitized summary.
+עדכן את פרטי ה-API של Hyp / Max Pay בפרויקט. השתמש במשתני סביבה בלבד, למשל HYP_USER, HYP_PASSWORD, HYP_API_KEY או HYP_PASSP לפי provider mode הפעיל. אל תכתוב ערכים סודיים לקוד, למסמכים או ללוגים. בדוק שאין חשיפה ב-Frontend והרץ diagnostics.
 ```
 
-Prompt: Add refund flow
+### עדכון callback URLs
 
 ```text
-Add a safe admin-only refund flow for this Max Pay / Hyp integration. Keep it disabled by default, require confirmation, and do not expose credentials.
+עדכן את כתובות callback והחזרה של Max Pay / Hyp בפרויקט. השתמש בדומיין ה-hosting ועדכן את MAXPAY_PUBLIC_BASE_URL, MAXPAY_SUCCESS_URL, MAXPAY_FAILED_URL, MAXPAY_CANCEL_URL ו-MAXPAY_NOTIFY_URL. אל תשנה לוגיקת checkout לא קשורה. ודא שהנתיבים ציבוריים ונגישים ל-Hyp.
 ```
 
-Prompt: Enable Apple Pay / Google Pay
+### הפעלת recurring
 
 ```text
-Enable Apple Pay / Google Pay using the existing Max Pay infrastructure. Check which Hyp terminal settings are required, update feature flags, and run diagnostics.
+הפעל recurring payments עבור אינטגרציית Max Pay / Hyp הקיימת. השתמש בתשתית שכבר הותקנה וב-feature flags. ודא תחילה שהמסוף תומך ב-tokenization/recurring. אל תשמור פרטי כרטיס. אל תתקין מחדש את האינטגרציה. לאחר השינוי הרץ diagnostics.
 ```
 
-Prompt: Switch provider mode
+### הפעלת invoices
 
 ```text
-Switch this integration between yaadpay_hosted and hyp_relay_api mode. Explain which env variables are required for each mode and do not hardcode credentials.
+הפעל invoices/documents עבור אינטגרציית Max Pay / Hyp הקיימת. בדוק שהמסוף תומך במודול חשבוניות או מסמכים. הוסף רק env/config נדרשים, אל תקשיח סודות, ואל תמחק קוד סליקה קיים. הרץ diagnostics לאחר השינוי.
 ```
 
-Prompt: Switch test to production
+### הפעלת Apple Pay / Google Pay
 
 ```text
-Switch this Max Pay / Hyp integration from test mode to production. Show exactly which env variables must change. Do not modify unrelated payment logic and do not hardcode secrets.
+הפעל Apple Pay / Google Pay עבור אינטגרציית Max Pay / Hyp הקיימת. השתמש בתשתית וב-feature flags שכבר קיימים. בדוק אילו הגדרות נדרשות במסוף Hyp. אל תתקין מחדש את האינטגרציה ואל תסיר checkout קיים. הרץ diagnostics.
 ```
 
-Prompt: Run diagnostics
+### בדיקת סטטוס עסקה
 
 ```text
-Run Max Pay diagnostics. Check provider mode, env vars, callback URLs, responseMac, frontend secrets, feature flags, transaction inquiry support, invoice support, recurring support, and payment routes.
+בדוק סטטוס עסקה באינטגרציית Max Pay / Hyp הקיימת באמצעות קריאות שרת-צד בטוחות בלבד. החזר תקציר מסונן ללא סודות, ללא פרטי כרטיס וללא payload מלא. אם חסרים credentials או הרשאות, עצור והסבר מה נדרש.
 ```
 
-## Useful prompts for future maintenance
-
-1. Run diagnostics
+### הוספת refund flow
 
 ```text
-Run Max Pay diagnostics in this project. Check routes, env vars, responseMac validation, feature flags, payment pages, provider conflicts, and build/test status if available. Do not delete or overwrite existing code. Return a clear PASS / WARNING / FAIL checklist.
+הוסף flow בטוח לזיכוי עסקה עבור אינטגרציית Max Pay / Hyp. השאר אותו כבוי כברירת מחדל, הגבל אותו למפעיל מורשה, דרוש אישור מפורש לפני פעולה כספית, ואל תחשוף credentials. אל תשנה checkout קיים בלי סיבה.
 ```
 
-2. Switch from test to production
+### תיקון אינטגרציה
 
 ```text
-Switch this Max Pay integration from test mode to production mode. Do not change code structure. Show which env vars need real production values and where to set them locally and in hosting. Do not print, store, or hardcode secret values.
+תקן את אינטגרציית Max Pay / Hyp הקיימת. סרוק קבצים, routes, config, env placeholders, responseMac, callback/notify ועמודי תשלום. צור מחדש רק חלקים חסרים או שבורים. אל תשכפל קבצים ואל תדרוס קוד מותאם אישית בלי להסביר.
 ```
 
-3. Update terminal/provider credentials
+### התאמת עמודי תשלום
 
 ```text
-Update the Max Pay / Hyp terminal/provider configuration for this project. Only update env variable names/placeholders and config references. Do not hardcode credentials. Do not touch unrelated payment logic.
+התאם את עמודי התשלום של Max Pay / Hyp בפרויקט הזה. עבור על /payment/success, /payment/failed, /payment/cancel ו-/terms. שמור על הלוגיקה הקיימת, אל תחשוף מידע רגיש, ואל תשנה את מנגנון ה-checkout או ה-callback. שפר רק את הטקסטים, העיצוב והקישורים בהתאם למותג. אחרי השינוי הרץ diagnostics.
 ```
 
-4. Enable recurring payments
+## 16. תקלות נפוצות
 
-```text
-Enable recurring payments for the existing Max Pay integration. Use the installed recurring infrastructure. Do not reinstall the full integration. Only enable required config flags and add missing safe pieces if needed.
-```
+### Credentials חסרים או placeholders
 
-5. Enable Apple Pay / Google Pay
+- סימפטום: diagnostics מחזיר SKIPPED_MISSING_CREDENTIALS או checkout לא נפתח.
+- סיבה אפשרית: חסרים משתני HYP/MAXPAY או נשארו ערכי YOUR_/PLACEHOLDER_.
+- מה לבדוק: בדוק שמות env בלבד, provider mode, וסביבת hosting. אל תדפיס ערכים.
+- פתרון בטוח: הגדר ערכים אמיתיים ב-.env מקומי או ב-hosting env בלבד. עצור אם לא ברור אילו credentials שייכים למסוף.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
 
-```text
-Enable Apple Pay / Google Pay for the existing Max Pay integration. Use the existing installed infrastructure. Check required Max Pay/Hyp configuration and show any manual setup steps. Do not remove existing checkout logic.
-```
+### Provider mode לא נכון
 
-6. Check payment provider conflicts
+- סימפטום: הקוד מנסה Relay API למרות שהמסוף מתאים לעמוד Hosted, או להפך.
+- סיבה אפשרית: MAXPAY_PROVIDER_MODE לא מתאים לנתונים שהתקבלו מ-Hyp.
+- מה לבדוק: בדוק אם המסוף עובד עם yaadpay_hosted או hyp_relay_api.
+- פתרון בטוח: שנה provider mode דרך env בלבד אחרי אימות מול הפאנל או התיעוד.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
 
-```text
-Check for payment provider conflicts in this project. Preserve existing code. Make Max Pay the active provider if it is not already active. Disable conflicting flows only through config or feature flags. Summarize every change.
-```
+### Endpoint הוא URL פאנל
 
-7. Repair missing files
+- סימפטום: בקשת API מחזירה HTML, login page או auth error לא ברור.
+- סיבה אפשרית: HYP_ENDPOINT הוגדר לכתובת login/panel במקום API endpoint.
+- מה לבדוק: בדוק שהכתובת מגיעה מתיעוד API או מהגדרות המסוף.
+- פתרון בטוח: עדכן HYP_ENDPOINT דרך env בלבד. אם אין endpoint רשמי ברור, עצור ושאל.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
 
-```text
-Repair the existing Max Pay integration. Scan for missing or incomplete files, routes, config, env placeholders, responseMac validation, and payment pages. Recreate only missing or broken parts. Do not duplicate files. Do not overwrite custom code without explaining.
-```
+### Callback / notify חסום
 
-8. Regenerate the Max Pay LLM guide
+- סימפטום: התשלום מסתיים אבל notify לא מתקבל.
+- סיבה אפשרית: URL לא ציבורי, deployment מוגן בסיסמה, route חסר או method לא נתמך.
+- מה לבדוק: בדוק MAXPAY_NOTIFY_URL, status code, auth protection והגדרות Hyp panel.
+- פתרון בטוח: השאר נתיבי payment ו-notify ציבוריים. הגן רק על אזורים רגישים.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
 
-```text
-Regenerate .maxpay/llm-install-guide.md based on the current Max Pay integration in this project. Include installed files, routes, feature flags, testing instructions, debugging prompts, and production readiness checklist. Do not include secrets.
-```
+### responseMac נכשל
+
+- סימפטום: callback או return נדחים בגלל חתימה לא תקינה.
+- סיבה אפשרית: סוד, סדר שדות, encoding או כלל חתימה לא מתאימים.
+- מה לבדוק: בדוק את כלל responseMac בתיעוד Hyp ואת השדות שנחתמים.
+- פתרון בטוח: תקן בצד שרת בלבד. אל תסמן תשלום כהצליח בלי אימות.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
+
+### עמוד תשלום לא נפתח
+
+- סימפטום: checkout לא מפנה לעמוד Hyp.
+- סיבה אפשרית: חסר HYP_PAYMENT_PAGE_URL, provider mode שגוי, או בניית בקשה שגויה.
+- מה לבדוק: בדוק env, logs מסוננים, ובניית URL בצד שרת.
+- פתרון בטוח: תקן את server-side builder בלבד. אל תעביר secrets ל-Frontend.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
+
+### עמוד תשלום נפתח ולא חוזר
+
+- סימפטום: המשתמש משלם או מבטל אך לא חוזר ל-success/failed/cancel.
+- סיבה אפשרית: כתובות return/cancel/error לא מוגדרות נכון ב-env או בפאנל Hyp.
+- מה לבדוק: בדוק MAXPAY_SUCCESS_URL, MAXPAY_FAILED_URL, MAXPAY_CANCEL_URL והגדרות הפאנל.
+- פתרון בטוח: עדכן URLs ב-env ובפאנל. עצור אם יש הבדל בין Preview ו-Production.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
+
+### Build נכשל אחרי התקנה
+
+- סימפטום: npm run build נכשל.
+- סיבה אפשרית: import path, alias חסר, ESM/CommonJS mismatch או route convention שונה.
+- מה לבדוק: בדוק הודעת build, routing model ו-tsconfig/jsconfig.
+- פתרון בטוח: התאם imports ומבנה route לפרויקט בלי לשנות לוגיקת תשלום מעבר לנדרש.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
+
+### חשיפת secret ב-Frontend
+
+- סימפטום: credentials מופיעים בקוד client או bundle.
+- סיבה אפשרית: שימוש ב-HYP_* בתוך קומפוננטות או public env.
+- מה לבדוק: חפש HYP_, PASSP, API_KEY, PASSWORD בקבצי client.
+- פתרון בטוח: העבר שימוש בסודות ל-API route/server בלבד וסובב credentials אם נחשפו.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
+
+### התקנה חוזרת או install-state חסר
+
+- סימפטום: rerun נחסם או מנסה להתנהג כהתקנה חדשה.
+- סיבה אפשרית: .maxpay/install-state.json נמחק, נפגם או לא תואם.
+- מה לבדוק: בדוק שהקובץ כולל app_id ו-installation_id.
+- פתרון בטוח: שחזר מגיבוי מקומי אם קיים. אל תנחש identity לפי path, branch, domain או repo.
+- מתי לעצור: כאשר נדרש secret אמיתי, שינוי flow עסקי, או שינוי אימות תשלום.
+

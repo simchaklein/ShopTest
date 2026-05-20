@@ -98,6 +98,10 @@ function buildYaadPayHostedUrl(order: ShopTestOrder, req: NextApiRequest) {
     UTF8: 'True',
     UTF8out: 'True',
     MoreData: 'True',
+    SuccessUrl: config.successUrl,
+    ErrorUrl: config.failedUrl,
+    CancelUrl: config.cancelUrl,
+    NotifyUrl: config.notifyUrl,
   });
 
   if (order.customer?.email || order.email) params.set('email', order.customer?.email || order.email || '');
