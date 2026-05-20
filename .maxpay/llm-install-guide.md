@@ -55,9 +55,13 @@
 
 מתאים למסופים שעובדים עם Hosted payment page.
 
-- MAXPAY_PROVIDER_MODE=yaadpay_hosted
+מינימום לפתיחת עמוד Hyp TEST:
+
 - HYP_PAYMENT_PAGE_URL
 - HYP_TERMINAL
+
+אופציונלי רק אם Hyp דורשת זאת למסוף:
+
 - HYP_API_KEY
 - HYP_PASSP
 - HYP_MID
@@ -82,33 +86,27 @@
 
 ## 6. משתני סביבה
 
-| Env Key | תפקיד | הערה |
+| Env Key | תפקיד | חובה? | הערה |
 | --- | --- | --- |
-| MAXPAY_ENV | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_PROVIDER_MODE | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_CORE_CHECKOUT | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_DIAGNOSTICS | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_RECURRING | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_INVOICES | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_APPLE_PAY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_GOOGLE_PAY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_REFUNDS | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_ENABLE_TRANSACTION_INQUIRY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_PUBLIC_BASE_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_SUCCESS_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_FAILED_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_CANCEL_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| MAXPAY_NOTIFY_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_PAYMENT_PAGE_URL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_ENDPOINT | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_TERMINAL | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_USER | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_PASSWORD | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_API_KEY | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_PASSP | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
-| HYP_MID | הגדרת Max Pay / Hyp | שם בלבד, ללא ערך סודי |
+| HYP_PAYMENT_PAGE_URL | פתיחת עמוד Hyp hosted TEST | כן | שם בלבד, ללא ערך סודי |
+| HYP_TERMINAL | פתיחת עמוד Hyp hosted TEST | כן | שם בלבד, ללא ערך סודי |
+| HYP_API_KEY | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| HYP_PASSP | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| HYP_MID | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| MAXPAY_PUBLIC_BASE_URL | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| MAXPAY_SUCCESS_URL | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| MAXPAY_FAILED_URL | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| MAXPAY_CANCEL_URL | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| MAXPAY_NOTIFY_URL | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| MAXPAY_ENV | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| MAXPAY_PROVIDER_MODE | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| HYP_ENDPOINT | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| HYP_USER | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
+| HYP_PASSWORD | override או יכולת מתקדמת | לא | להגדיר רק אם צריך |
 
-כל הערכים נשמרים ב-.env מקומי או ב-hosting env בלבד. אין לשמור values במסמך הזה.
+המטרה היא מינימום הגדרה. הגדרות לא רגישות כמו provider mode, מצב test/production ו-feature flags נמצאות כברירת מחדל ב-lib/maxpay/config.*. אפשר לערוך אותן מאוחר יותר בעזרת וייבקודינג בלי להכניס אותן ל-env.
+
+כל הערכים הרגישים נשמרים ב-.env מקומי או ב-hosting env בלבד. אין לשמור values במסמך הזה.
 
 ## 7. API contracts
 

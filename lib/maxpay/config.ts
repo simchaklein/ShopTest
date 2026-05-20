@@ -19,9 +19,23 @@ export type MaxPayConfig = {
   notifyUrl: string;
 };
 
+export const maxPayDefaults = {
+  env: 'test' as const,
+  providerMode: 'yaadpay_hosted' as MaxPayProviderMode,
+  features: {
+    coreCheckout: true,
+    diagnostics: true,
+    recurring: false,
+    invoices: false,
+    applePay: false,
+    googlePay: false,
+    refunds: false,
+    transactionInquiry: false,
+  },
+};
 
 function readProviderMode(value: string | undefined): MaxPayProviderMode {
-  return value === 'hyp_relay_api' ? 'hyp_relay_api' : 'yaadpay_hosted';
+  return value === 'hyp_relay_api' ? 'hyp_relay_api' : maxPayDefaults.providerMode;
 }
 
 function readFlag(name: string, defaultValue: boolean) {
@@ -58,10 +72,10 @@ export function getMaxPayConfig(req?: { headers?: { host?: string | string[]; 'x
   const baseUrl = getMaxPayBaseUrl(req);
 
   return {
-    env: process.env.MAXPAY_ENV === 'production' ? 'production' : 'test',
+    env: process.env.MAXPAY_ENV === 'production' ? 'production' : maxPayDefaults.env,
     providerMode: readProviderMode(process.env.MAXPAY_PROVIDER_MODE),
-    enabled: readFlag('MAXPAY_ENABLE_CORE_CHECKOUT', true),
-    diagnosticsEnabled: readFlag('MAXPAY_ENABLE_DIAGNOSTICS', true),
+    enabled: readFlag('MAXPAY_ENABLE_CORE_CHECKOUT', maxPayDefaults.features.coreCheckout),
+    diagnosticsEnabled: readFlag('MAXPAY_ENABLE_DIAGNOSTICS', maxPayDefaults.features.diagnostics),
     terminal: process.env.HYP_TERMINAL || '',
     mid: process.env.HYP_MID || '',
     apiKey: process.env.HYP_API_KEY || '',
@@ -83,8 +97,6 @@ export function getMissingMaxPayEnv(config = getMaxPayConfig()) {
 
   if (config.providerMode === 'yaadpay_hosted') {
     if (!hasUsableEnvValue(config.paymentPageUrl)) missing.push('HYP_PAYMENT_PAGE_URL');
-    if (!hasUsableEnvValue(config.apiKey)) missing.push('HYP_API_KEY');
-    if (!hasUsableEnvValue(config.passp)) missing.push('HYP_PASSP');
     return missing;
   }
 
